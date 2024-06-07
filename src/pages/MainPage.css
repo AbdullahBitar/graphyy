@@ -1,0 +1,33 @@
+.main-page {
+    display: flex;
+    height: 100vh;
+}
+
+.graph-container,
+.text-box,
+.controls {
+    margin: 20px;
+}
+
+.graph-container {
+    flex: 1;
+    border: 1px solid #000;
+    height: calc(100vh - 40px);
+}
+
+.text-box {
+    width: 15%;
+}
+
+.text-input {
+    width: 100%;
+    height: calc(100vh - 40px);
+    resize: none;
+    font-size: 20px;
+}
+
+.controls {
+    width: 20%;
+    border: 1px solid #000;
+    height: calc(100vh - 40px);
+}
