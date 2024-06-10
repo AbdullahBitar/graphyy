@@ -1,35 +1,28 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import './MainPage.css';
-import Two from 'two.js'
+import * as d3 from 'd3';
 import { Edge, Node } from '../common/common';
 
 export function MainPage() {
 
-    const graphContainerRef = useRef<HTMLDivElement>(null);
+    const graphContainerRef = useRef<SVGSVGElement>(null);
     const [edges, setEdges] = useState('')
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>())
     const [allEdges, setAllEdges] = useState<Map<Edge, any>>(new Map<Edge, any>())
-
-    const two = useRef<Two | null>(null);
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value)
     }
 
     useEffect(() => {
-        if (graphContainerRef.current) {
-            two.current = new Two({
-                fullscreen: true,
-                type: Two.Types.canvas
-            }).appendTo(graphContainerRef.current)
+        if (!graphContainerRef || !graphContainerRef.current) return
 
-            two.current.width = graphContainerRef.current.offsetWidth;
-            two.current.height = graphContainerRef.current.offsetHeight;
-        }
-    }, []);
+        const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20
 
-    useEffect(() => {
-        if (!two.current) return
+        const svg = d3.select(graphContainerRef.current)
+            .attr('width', width)
+            .attr('height', height);
+
         const nodeSet = new Set<Node>()
 
         const edgeSet = new Set<Edge>();
@@ -47,67 +40,90 @@ export function MainPage() {
 
         for (const node of nodeSet) {
             if (!allNodes.has(node)) {
-                const circle = two.current.makeCircle(two.current.width * Math.random(), two.current.height * Math.random(), 20)
-                circle.linewidth = 3
-                const text = two.current.makeText(node.toString(), circle.translation.x, circle.translation.y);
-                const circleWithText = two.current.makeGroup(circle, text)
+
+                const randomX = Math.random() * (width - 2 * margin) + margin;
+                const randomY = Math.random() * (height - 2 * margin) + margin;
+
+                const circleWithText = svg.append('g')
+                    .attr('transform', `translate(${randomX}, ${randomY})`);
+
+                const circle = circleWithText.append('circle')
+                    .attr('r', 25)
+                    .style('fill', 'none')
+                    .style('stroke', 'black')
+                    .style('stroke-width', 3);
+
+                const text = circleWithText.append('text')
+                    .attr('text-anchor', 'middle')
+                    .attr('alignment-baseline', 'middle')
+                    .style('font-size', '14px')
+                    .style('fill', 'black')
+                    .text(node);
+
                 allNodes.set(node, circleWithText)
             }
         }
 
         for (const [node, circle] of allNodes) {
             if (!nodeSet.has(node)) {
-                two.current.remove(circle)
+                circle.remove()
                 allNodes.delete(node)
             }
         }
 
         for (const edge of edgeSet) {
-            const fromNode = allNodes.get(edge.from)
-            const toNode = allNodes.get(edge.to)
+            const fromNode = allNodes.get(edge.from);
+            const toNode = allNodes.get(edge.to);
 
-            if(fromNode === toNode)continue
-        
-            if (fromNode && toNode && fromNode.children && toNode.children && !allEdges.has(edge)) {
-                const fromCircle = fromNode.children[0]
-                const toCircle = toNode.children[0]
-        
-                const angle = Math.atan2(toCircle.translation.y - fromCircle.translation.y, toCircle.translation.x - fromCircle.translation.x)
-        
-                const fromX = fromCircle.translation.x + (Math.cos(angle) * fromCircle.radius)
-                const fromY = fromCircle.translation.y + (Math.sin(angle) * fromCircle.radius)
-                const toX = toCircle.translation.x - (Math.cos(angle) * toCircle.radius)
-                const toY = toCircle.translation.y - (Math.sin(angle) * toCircle.radius)
-        
-                const line = two.current.makeLine(
-                    fromX,
-                    fromY,
-                    toX,
-                    toY
-                );
-                line.linewidth = 2
-                allEdges.set(edge, line)
-            }
+            if (fromNode === toNode || !fromNode || !toNode || allEdges.has(edge)) continue;
+
+            const fromTransform = fromNode.attr('transform');
+            const toTransform = toNode.attr('transform');
+
+            const [fromX, fromY] = fromTransform.split('(')[1].split(',').map(parseFloat);
+            const fromRadius = parseFloat(fromNode.select('circle').attr('r'));
+
+            const [toX, toY] = toTransform.split('(')[1].split(',').map(parseFloat);
+            const toRadius = parseFloat(toNode.select('circle').attr('r'));
+
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const unitDx = dx / length;
+            const unitDy = dy / length;
+
+            const startX = fromX + unitDx * fromRadius;
+            const startY = fromY + unitDy * fromRadius;
+            const endX = toX - unitDx * toRadius;
+            const endY = toY - unitDy * toRadius;
+
+            const line = svg.append("line")
+                .attr("x1", startX)
+                .attr("y1", startY)
+                .attr("x2", endX)
+                .attr("y2", endY)
+                .attr("stroke", "black")
+                .attr("stroke-width", 2);
+
+            allEdges.set(edge, line);
         }
-        
-        for(const edge of allEdges.keys()){
-            if(!edgeSet.has(edge)){
-                two.current.remove(allEdges.get(edge))
+
+        for (const edge of allEdges.keys()) {
+            if (!edgeSet.has(edge)) {
+                allEdges.get(edge).remove()
                 allEdges.delete(edge)
             }
         }
 
         setAllNodes(new Map(allNodes))
         setAllEdges(new Map(allEdges))
-
-        two.current.update()
     }, [edges])
 
     return (
         <div className="main-page">
-            <div ref={graphContainerRef} className="graph-container">
+            <svg ref={graphContainerRef} className="graph-container">
 
-            </div>
+            </svg>
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
