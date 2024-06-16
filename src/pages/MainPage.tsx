@@ -2,6 +2,7 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import './MainPage.css';
 import * as d3 from 'd3';
 import { Edge, Node } from '../common/common';
+import Controls from './controls';
 
 export function MainPage() {
 
@@ -158,7 +159,7 @@ export function MainPage() {
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
-            <div className="controls"></div>
+            <Controls/>
         </div>
     );
 }
