@@ -38,7 +38,7 @@ export function MainPage() {
 
         edges.split('\n').forEach(edge => {
             const numOfInputs = edge.split(' ').length;
-            if (numOfInputs !== 2 && numOfInputs !== 3) return;
+            if (numOfInputs < 1 || numOfInputs > 3) return;
 
             const [from, to, weight] = edge.split(' ');
 
@@ -101,7 +101,7 @@ export function MainPage() {
         nodeEnter.append('circle')
             .attr('r', nodeRadius)
             .attr('fill', 'white')
-            .attr('stroke', 'black')
+            .attr('stroke', getRandomHexColor())
             .attr('stroke-width', 3);
 
         nodeEnter.append('text')
@@ -141,6 +141,16 @@ export function MainPage() {
         }
 
     }, [edges])
+
+    function getRandomHexColor() {
+        const letters = '0123456789ABCDEF';
+        let color = '#';
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+    
 
     return (
         <div className="main-page">
