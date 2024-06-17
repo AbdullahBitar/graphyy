@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import './MainPage.css';
 import * as d3 from 'd3';
-import { Edge, Node } from '../common/common';
+import { Edge, Node, getRandomHexColor } from '../common/common';
 import Controls from './controls';
 
 export function MainPage() {
@@ -9,6 +9,8 @@ export function MainPage() {
     const graphContainerRef = useRef<SVGSVGElement>(null)
     const simulationRef = useRef<any>(null);
     const [edges, setEdges] = useState('')
+    const [isColorful, setIsColorful] = useState(true);
+
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value)
@@ -19,7 +21,7 @@ export function MainPage() {
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         const nodeRadius = 20;
-
+        
         const svg = d3.select(graphContainerRef.current)
             .attr('width', width)
             .attr('height', height);
@@ -102,7 +104,7 @@ export function MainPage() {
         nodeEnter.append('circle')
             .attr('r', nodeRadius)
             .attr('fill', 'white')
-            .attr('stroke', getRandomHexColor())
+            .attr('stroke', (isColorful ? getRandomHexColor() : 'black'))
             .attr('stroke-width', 3);
 
         nodeEnter.append('text')
@@ -115,13 +117,13 @@ export function MainPage() {
 
         function ticked() {
             svg.selectAll('.node')
-                .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+                .attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
 
             svg.selectAll('line')
-                .attr('x1', (d: any) => d.source.x)
-                .attr('y1', (d: any) => d.source.y)
-                .attr('x2', (d: any) => d.target.x)
-                .attr('y2', (d: any) => d.target.y);
+                .attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
+                .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
+                .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
+                .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
         }
 
         function dragStarted(event: any, d: any) {
@@ -143,23 +145,13 @@ export function MainPage() {
 
     }, [edges])
 
-    function getRandomHexColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-    
-
     return (
         <div className="main-page">
             <svg ref={graphContainerRef} className="graph-container"></svg>
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
-            <Controls/>
+            <Controls graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} />
         </div>
     );
 }
