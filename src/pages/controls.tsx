@@ -36,10 +36,10 @@ export function Controls(props: any) {
     const handleGraphNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.valueAsNumber;
         setGraphNodesNum(value > 0 ? value : 1);
-
-        let nodes = value > 0 ? value : 1
-        const maxEdges = nodes * (nodes - 1) / 2
-        if(graphEdgesNum > maxEdges)setGraphEdgesNum(maxEdges)
+        const maxEdges = value * (value - 1) / 2;
+        if (graphEdgesNum > maxEdges) {
+            setGraphEdgesNum(maxEdges);
+        }
     };
 
     const handleTreeNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
