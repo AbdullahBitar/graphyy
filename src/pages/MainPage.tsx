@@ -10,6 +10,7 @@ export function MainPage() {
     const simulationRef = useRef<any>(null);
     const [edges, setEdges] = useState('');
     const [isColorful, setIsColorful] = useState(true);
+    const [isTidy, setIsTidy] = useState(false);
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -17,6 +18,11 @@ export function MainPage() {
 
     const drawGraph = () => {
         if (!graphContainerRef.current) return;
+
+        if(isTidy){
+            simulationRef.current?.stop();
+            simulationRef.current = null;
+        }
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         const nodeRadius = 20;
@@ -174,7 +180,7 @@ export function MainPage() {
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
-            <Controls graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} />
+            <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} />
         </div>
     );
 }

@@ -58,6 +58,8 @@ export function Controls(props: any) {
 
     const tidyGraph = () => {
         if (!props.graphContainerRef.current) return;
+        
+        props.setIsTidy(true);
 
         const width = props.graphContainerRef.current.clientWidth;
         const height = props.graphContainerRef.current.clientHeight;
@@ -95,7 +97,12 @@ export function Controls(props: any) {
             const treeLayout = d3.tree().size([width - margin * 2, height - margin * 2]);
             treeLayout(root);
 
-            const simulation = d3.forceSimulation()
+            if (props.simulationRef.current) {
+                props.simulationRef.current.stop();
+                props.simulationRef.current = null;
+            }
+
+            const simulation = props.simulationRef.current = d3.forceSimulation()
                 .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('link', d3.forceLink().id((d: any) => d.id))
                 .force('charge', d3.forceManyBody().strength(-300))
