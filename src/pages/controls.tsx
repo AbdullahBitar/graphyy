@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import './controls.css';
 import * as d3 from 'd3';
-import { getRandomHexColor } from '../common/common';
+import { Edge, getRandomHexColor, Node } from '../common/common';
 import {generateRandomGraph, generateRandomTree} from '../algorithms/generate-graphs'
+import { getAdjancecyList } from '../algorithms/adjacency-list';
+import { getHierarchyData } from '../algorithms/hierarchy';
 
 export function Controls(props: any) {
     const [activeTab, setActiveTab] = useState('graphs');
@@ -53,6 +55,106 @@ export function Controls(props: any) {
         if(value < 0)setGraphEdgesNum(1);
         else setGraphEdgesNum(value <= maxNumOfEdges ? value : maxNumOfEdges);
     };
+
+    const tidyGraph = () => {
+        if (!props.graphContainerRef.current) return;
+
+        const width = props.graphContainerRef.current.clientWidth;
+        const height = props.graphContainerRef.current.clientHeight;
+        const margin = 20;
+        const nodeRadius = 20;
+
+        const svg = d3.select(props.graphContainerRef.current)
+            .attr('width', width)
+            .attr('height', height);
+
+        try {
+            let minNode: any = undefined;
+            const edges = props.edges.split('\n').map((edge: string) => {
+                const parts = edge.split(' ');
+                if (parts.length < 2 || parts.length > 3) return undefined;
+                const [from, to, weight] = parts;
+
+                if (!minNode) minNode = from;
+                if (minNode > to) minNode = to;
+                if (minNode > from) minNode = from;
+
+                return { from, to, weight };
+            }).filter((edge: Edge ) => edge !== undefined);
+
+            if (!minNode) {
+                console.error('No minimum node found');
+                return;
+            }
+
+            const adjacencyList = getAdjancecyList(edges);
+            const visited = new Map();
+
+            const hierarchy = getHierarchyData(minNode, adjacencyList, visited, -1);
+            const root = d3.hierarchy(hierarchy);
+            const treeLayout = d3.tree().size([width - margin * 2, height - margin * 2]);
+            treeLayout(root);
+
+            const simulation = d3.forceSimulation()
+                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('link', d3.forceLink().id((d: any) => d.id))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('collision', d3.forceCollide().radius(nodeRadius + 2));
+
+            simulation.nodes(root.descendants())
+                .on('tick', () => {
+                    nodes.attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
+                    links.attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
+                        .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
+                        .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
+                        .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
+                });
+
+            simulation.force<any>('link').links(root.links());
+
+            const links = svg.selectAll('.edge')
+                .data(root.links())
+
+            const nodes = svg.selectAll('.node')
+                .data(root.descendants())
+                
+            lockGraph()
+        } catch (e) {
+            console.error(e);
+            alert(e);
+        }
+    };
+
+    const lockGraph = () => {
+        if(!props.graphContainerRef.current)return;
+        const svg = d3.select(props.graphContainerRef.current);
+        const nodes = svg.selectAll('.node')
+
+        svg.selectAll('circle')
+            .attr("stroke-width", 5)
+
+        nodes.each((d: any) => {
+            d.locked = true;
+            d.fx = d.x;
+            d.fy = d.y;
+        });
+    }
+
+    const unlockGraph = () => {
+        if(!props.graphContainerRef.current)return;
+        const svg = d3.select(props.graphContainerRef.current);
+        const nodes = svg.selectAll('.node')
+
+        svg.selectAll('circle')
+            .attr("stroke-width", 3)
+            
+        nodes.each((d: any) => {
+            d.locked = false;
+            d.fx = null;
+            d.fy = null;
+        });
+    }
+    
 
     const renderControls = () => {
         switch (activeTab) {
@@ -149,9 +251,19 @@ export function Controls(props: any) {
                     <span className="slider round"></span>
                 </label>
             </div>
-            <div className="controls-content">
-                <button className="button">
-                    Rearrange graph
+            <div className="universal-controls">
+                <button className="button" onClick={tidyGraph}>
+                    Tidy graph
+                </button>
+            </div>
+            <div className='universal-controls'>
+                <button className="button" onClick={lockGraph}>
+                    Lock all nodes
+                </button>
+            </div>
+            <div className='universal-controls'>
+                <button className="button" onClick={unlockGraph}>
+                    Unlock all nodes
                 </button>
             </div>
         </div>

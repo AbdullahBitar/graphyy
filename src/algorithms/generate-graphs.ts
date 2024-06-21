@@ -25,7 +25,7 @@ export const generateRandomGraph = (numberOfNodes: number, numberOfEdges: number
 
         let loop = 0
 
-        while(loop < 1000 && (edgeSet.has(`${i}-${randomNode}`) || randomNode == i)){
+        while(loop < 10000 && (edgeSet.has(`${i}-${randomNode}`) || randomNode == i)){
             randomNode = Math.floor(Math.random() * (numberOfNodes)) + 1;
             loop++
         }

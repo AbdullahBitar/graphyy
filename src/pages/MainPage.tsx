@@ -6,22 +6,21 @@ import Controls from './controls';
 
 export function MainPage() {
 
-    const graphContainerRef = useRef<SVGSVGElement>(null)
+    const graphContainerRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<any>(null);
-    const [edges, setEdges] = useState('')
+    const [edges, setEdges] = useState('');
     const [isColorful, setIsColorful] = useState(true);
 
-
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-        setEdges(event.target.value)
-    }
+        setEdges(event.target.value);
+    };
 
-    useEffect(() => {
+    const drawGraph = () => {
         if (!graphContainerRef.current) return;
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         const nodeRadius = 20;
-        
+
         const svg = d3.select(graphContainerRef.current)
             .attr('width', width)
             .attr('height', height);
@@ -52,6 +51,7 @@ export function MainPage() {
 
         let nodesArray = Array.from(nodeSet).map((node) => ({
             id: node,
+            locked: false,
         }));
 
         let edgesArray = Array.from(edgeSet).map(edge => ({
@@ -64,7 +64,7 @@ export function MainPage() {
 
         if (!simulationRef.current) {
             simulationRef.current = d3.forceSimulation(nodesArray as any)
-                .force('charge', d3.forceManyBody().strength(-50))
+                .force('charge', d3.forceManyBody().strength(-30))
                 .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('link', d3.forceLink(validEdgesArray).distance(100).id((d: any) => d.id))
                 .on('tick', ticked);
@@ -95,6 +95,7 @@ export function MainPage() {
         const nodeEnter = node.enter()
             .append('g')
             .attr('class', 'node')
+            .on('click', toggleLock)
             .call(d3.drag<any, any>()
                 .on('start', dragStarted)
                 .on('drag', dragged)
@@ -104,7 +105,7 @@ export function MainPage() {
         nodeEnter.append('circle')
             .attr('r', nodeRadius)
             .attr('fill', 'white')
-            .attr('stroke', (isColorful ? getRandomHexColor() : 'black'))
+            .attr('stroke', (d: any) => (d.locked ? 'red' : (isColorful ? getRandomHexColor() : 'black')))
             .attr('stroke-width', 3);
 
         nodeEnter.append('text')
@@ -139,11 +140,33 @@ export function MainPage() {
 
         function dragEnded(event: any, d: any) {
             if (!event.active) simulationRef.current.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
+            if (d.locked) {
+                d.fx = d.x;
+                d.fy = d.y;
+            } else {
+                d.fx = null;
+                d.fy = null;
+            }
         }
 
-    }, [edges])
+        function toggleLock(event: any, d: any) {
+            d.locked = !d.locked;
+            d3.select(event.currentTarget).select('circle').attr('stroke-width', d.locked ? 5 : 3);
+        
+            if (d.locked) {
+                d.fx = d.x;
+                d.fy = d.y;
+            } else {
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+        
+    }
+
+    useEffect(() => {
+        drawGraph();
+    }, [edges]);
 
     return (
         <div className="main-page">
@@ -151,7 +174,7 @@ export function MainPage() {
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
-            <Controls graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} />
+            <Controls graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} />
         </div>
     );
 }

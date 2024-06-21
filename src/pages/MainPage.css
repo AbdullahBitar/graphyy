@@ -33,6 +33,5 @@
 }
 
 circle:hover {
-    stroke-width: 4;
     cursor: pointer;
 }

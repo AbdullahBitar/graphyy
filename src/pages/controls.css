@@ -124,3 +124,8 @@ input:checked + .slider:before {
     margin-top: -10px;
     margin-bottom: 30px;
 }
+
+.universal-controls{
+    text-align: center;
+    margin-bottom:10px;
+}
