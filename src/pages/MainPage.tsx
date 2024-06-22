@@ -11,6 +11,7 @@ export function MainPage() {
     const [edges, setEdges] = useState('');
     const [isColorful, setIsColorful] = useState(true);
     const [isTidy, setIsTidy] = useState(false);
+    const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -41,7 +42,6 @@ export function MainPage() {
             nodesGroup = svg.append('g').attr('class', 'nodes');
         }
 
-        let nodeSet = new Set<Node>();
         let edgeSet = new Set<Edge>();
 
         edges.split('\n').forEach(edge => {
@@ -50,15 +50,18 @@ export function MainPage() {
 
             const [from, to, weight] = edge.split(' ');
 
-            if (from) nodeSet.add(from);
-            if (to) nodeSet.add(to);
+            if (from && !allNodes.has(from)){
+                allNodes.set(from, { id: from, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
+            }
+            if (to && !allNodes.has(to)){
+                allNodes.set(to, { id: to, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
+            }
             edgeSet.add({ from, to, weight });
         });
 
-        let nodesArray = Array.from(nodeSet).map((node) => ({
-            id: node,
-            locked: false,
-        }));
+        setAllNodes(new Map(allNodes))
+
+        let nodesArray = Array.from(allNodes.values())
 
         let edgesArray = Array.from(edgeSet).map(edge => ({
             source: edge.from,
@@ -66,14 +69,20 @@ export function MainPage() {
             weight: edge?.weight
         }));
 
-        const validEdgesArray = edgesArray.filter(edge => nodeSet.has(edge.source) && nodeSet.has(edge.target));
+        const validEdgesArray = edgesArray.filter(edge => allNodes.has(edge.source) && allNodes.has(edge.target));
 
         if (!simulationRef.current) {
             simulationRef.current = d3.forceSimulation(nodesArray as any)
                 .force('charge', d3.forceManyBody().strength(-30))
-                .force('center', d3.forceCenter(width / 2, height / 2))
+                .force('collision', d3.forceCollide().radius(nodeRadius + 20))
                 .force('link', d3.forceLink(validEdgesArray).distance(100).id((d: any) => d.id))
-                .on('tick', ticked);
+                .on('tick', ticked)
+                .force('boundary', (alpha) => {
+                    simulationRef.current.nodes().forEach((node: any) => {
+                        node.x = Math.max(nodeRadius, Math.min(width - nodeRadius, node.x));
+                        node.y = Math.max(nodeRadius, Math.min(height - nodeRadius, node.y));
+                    });
+                });
         } else {
             const simulation = simulationRef.current;
             simulation.nodes(nodesArray as any);
