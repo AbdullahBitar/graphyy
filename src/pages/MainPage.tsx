@@ -43,6 +43,7 @@ export function MainPage() {
         }
 
         let edgeSet = new Set<Edge>();
+        let nodeSet = new Set<Node>();
 
         edges.split('\n').forEach(edge => {
             const numOfInputs = edge.split(' ').length;
@@ -50,14 +51,24 @@ export function MainPage() {
 
             const [from, to, weight] = edge.split(' ');
 
-            if (from && !allNodes.has(from)){
-                allNodes.set(from, { id: from, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
+            if (from){
+                nodeSet.add(from);
+                if(!allNodes.has(from))
+                    allNodes.set(from, { id: from, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
             }
-            if (to && !allNodes.has(to)){
-                allNodes.set(to, { id: to, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
+            if (to){
+                nodeSet.add(to);
+                if(!allNodes.has(to))
+                    allNodes.set(to, { id: to, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
             }
             edgeSet.add({ from, to, weight });
         });
+
+        for(let node of allNodes.keys()){
+            if(!nodeSet.has(node)){
+                allNodes.delete(node);
+            }
+        }
 
         setAllNodes(new Map(allNodes))
 
@@ -75,7 +86,7 @@ export function MainPage() {
             simulationRef.current = d3.forceSimulation(nodesArray as any)
                 .force('charge', d3.forceManyBody().strength(-30))
                 .force('collision', d3.forceCollide().radius(nodeRadius + 20))
-                .force('link', d3.forceLink(validEdgesArray).distance(100).id((d: any) => d.id))
+                .force('link', d3.forceLink(validEdgesArray).distance(90).id((d: any) => d.id))
                 .on('tick', ticked)
                 .force('boundary', (alpha) => {
                     simulationRef.current.nodes().forEach((node: any) => {
