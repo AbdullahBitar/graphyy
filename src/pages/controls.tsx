@@ -71,31 +71,47 @@ export function Controls(props: any) {
             .attr('height', height);
 
         try {
-            let minNode: any = undefined;
+
+            const allNodes: Node[] = []
             const edges = props.edges.split('\n').map((edge: string) => {
                 const parts = edge.split(' ');
                 if (parts.length < 2 || parts.length > 3) return undefined;
                 const [from, to, weight] = parts;
 
-                if (!minNode) minNode = from;
-                if (minNode > to) minNode = to;
-                if (minNode > from) minNode = from;
+                allNodes.push(from);
+                allNodes.push(to);
 
                 return { from, to, weight };
             }).filter((edge: Edge ) => edge !== undefined);
 
-            if (!minNode) {
-                console.error('No minimum node found');
+            if (allNodes.length === 0) {
+                console.error('No node found');
                 return;
             }
+
+            allNodes.sort();
 
             const adjacencyList = getAdjancecyList(edges);
             const visited = new Map();
 
-            const hierarchy = getHierarchyData(minNode, adjacencyList, visited, -1);
-            const root = d3.hierarchy(hierarchy);
+            const hierarchies = allNodes.map(rootNode => {
+                if(visited.has(rootNode))return null
+                return getHierarchyData(rootNode, adjacencyList, visited, -1);
+            }).filter(hierarchy => hierarchy !== null)
+
             const treeLayout = d3.tree().size([width - margin * 2, height - margin * 2]);
-            treeLayout(root);
+
+            let combinedNodes: any = [];
+            let combinedLinks: any = [];
+
+            hierarchies.forEach((hierarchyData, index) => {
+                const root = d3.hierarchy(hierarchyData);
+                treeLayout(root);
+
+                combinedNodes = combinedNodes.concat(root.descendants());
+                combinedLinks = combinedLinks.concat(root.links());
+            });
+            
 
             if (props.simulationRef.current) {
                 props.simulationRef.current.stop();
@@ -103,12 +119,17 @@ export function Controls(props: any) {
             }
 
             const simulation = props.simulationRef.current = d3.forceSimulation()
-                .force('center', d3.forceCenter(width / 2, height / 2))
                 .force('link', d3.forceLink().id((d: any) => d.id))
-                .force('charge', d3.forceManyBody().strength(-300))
-                .force('collision', d3.forceCollide().radius(nodeRadius + 2));
+                .force('charge', d3.forceManyBody().strength(-30))
+                .force('collision', d3.forceCollide().radius(nodeRadius + 20))
+                .force('boundary', (alpha) => {
+                    simulation.nodes().forEach((node: any) => {
+                        node.x = Math.max(nodeRadius, Math.min(width - nodeRadius, node.x));
+                        node.y = Math.max(nodeRadius, Math.min(height - nodeRadius, node.y));
+                    });
+                });
 
-            simulation.nodes(root.descendants())
+            simulation.nodes(combinedNodes)
                 .on('tick', () => {
                     nodes.attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
                     links.attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
@@ -117,13 +138,13 @@ export function Controls(props: any) {
                         .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
                 });
 
-            simulation.force<any>('link').links(root.links());
+            simulation.force<any>('link').links(combinedLinks);
 
             const links = svg.selectAll('.edge')
-                .data(root.links())
+                .data(combinedLinks)
 
             const nodes = svg.selectAll('.node')
-                .data(root.descendants())
+                .data(combinedNodes)
                 
             lockGraph()
         } catch (e) {
