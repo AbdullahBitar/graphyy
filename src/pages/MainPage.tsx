@@ -20,17 +20,19 @@ export function MainPage() {
     const drawGraph = () => {
         if (!graphContainerRef.current) return;
 
-        if(isTidy){
-            simulationRef.current?.stop();
-            simulationRef.current = null;
-        }
-
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         const nodeRadius = 20;
 
         const svg = d3.select(graphContainerRef.current)
             .attr('width', width)
             .attr('height', height);
+
+        if (isTidy) {
+            simulationRef.current?.stop();
+            simulationRef.current = null;
+            svg.selectAll('*').remove();
+            setIsTidy(false);
+        }
 
         let edgesGroup: any = svg.select('.edges');
         if (edgesGroup.empty()) {
@@ -51,21 +53,21 @@ export function MainPage() {
 
             const [from, to, weight] = edge.split(' ');
 
-            if (from){
+            if (from) {
                 nodeSet.add(from);
-                if(!allNodes.has(from))
+                if (!allNodes.has(from))
                     allNodes.set(from, { id: from, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
             }
-            if (to){
+            if (to) {
                 nodeSet.add(to);
-                if(!allNodes.has(to))
+                if (!allNodes.has(to))
                     allNodes.set(to, { id: to, locked: false, x: width / 2 + Math.random() * 20 - 10, y: height / 2 + Math.random() * 20 - 10 });
             }
             edgeSet.add({ from, to, weight });
         });
 
-        for(let node of allNodes.keys()){
-            if(!nodeSet.has(node)){
+        for (let node of allNodes.keys()) {
+            if (!nodeSet.has(node)) {
                 allNodes.delete(node);
             }
         }
@@ -113,6 +115,18 @@ export function MainPage() {
             .attr('stroke-width', 2)
             .merge(lines as any);
 
+        const weights = edgesGroup.selectAll('.edge-weight')
+            .data(validEdgesArray);
+
+        weights.exit().remove();
+
+        const weightsEnter = weights.enter()
+            .append('text')
+            .attr('class', 'edge-weight')
+            .attr('fill', 'black')
+            .attr('dy', -10)
+            .merge(weights as any);
+
         const node = nodesGroup.selectAll('.node')
             .data(nodesArray, (d: any) => d.id);
 
@@ -151,6 +165,40 @@ export function MainPage() {
                 .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
                 .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
                 .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
+
+            svg.selectAll('.edge-weight')
+                .attr('x', function (d: any) {
+                    let midX = (d.source.x + d.target.x) / 2;
+
+                    let dx = d.target.x - d.source.x;
+                    let dy = d.target.y - d.source.y;
+
+                    let length = Math.sqrt(dx * dx + dy * dy);
+
+                    let normalX = dy / length;
+
+                    let offsetX = midX + 10 * normalX;
+                    if (dx < 0) {
+                        offsetX = midX - 10 * normalX;
+                    }
+
+                    return offsetX;
+                })
+                .attr('y', function (d: any) {
+                    let midY = (d.source.y + d.target.y) / 2;
+                    let dx = d.target.x - d.source.x;
+                    let dy = d.target.y - d.source.y;
+                    let length = Math.sqrt(dx * dx + dy * dy);
+                    let normalY = -dx / length;
+
+                    let offsetY = midY + 10 * normalY;
+                    if (dx < 0) {
+                        offsetY = midY - 10 * normalY;
+                    }
+
+                    return offsetY;
+                })
+                .text((d: any) => d.weight);
         }
 
         function dragStarted(event: any, d: any) {
@@ -178,7 +226,7 @@ export function MainPage() {
         function toggleLock(event: any, d: any) {
             d.locked = !d.locked;
             d3.select(event.currentTarget).select('circle').attr('stroke-width', d.locked ? 5 : 3);
-        
+
             if (d.locked) {
                 d.fx = d.x;
                 d.fy = d.y;
@@ -187,7 +235,7 @@ export function MainPage() {
                 d.fy = null;
             }
         }
-        
+
     }
 
     useEffect(() => {

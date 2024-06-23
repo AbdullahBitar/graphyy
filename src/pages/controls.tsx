@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './controls.css';
 import * as d3 from 'd3';
 import { Edge, getRandomHexColor, Node } from '../common/common';
-import {generateRandomGraph, generateRandomTree} from '../algorithms/generate-graphs'
+import { generateRandomGraph, generateRandomTree } from '../algorithms/generate-graphs'
 import { getAdjancecyList } from '../algorithms/adjacency-list';
 import { getHierarchyData } from '../algorithms/hierarchy';
 
@@ -48,17 +48,17 @@ export function Controls(props: any) {
         const value = event.target.valueAsNumber;
         setTreeNodesNum(value > 0 ? value : 1);
     };
-    
+
     const handleGraphEdgeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.valueAsNumber;
         const maxNumOfEdges = graphNodesNum * (graphNodesNum - 1) / 2
-        if(value < 0)setGraphEdgesNum(1);
+        if (value < 0) setGraphEdgesNum(1);
         else setGraphEdgesNum(value <= maxNumOfEdges ? value : maxNumOfEdges);
     };
 
     const tidyGraph = () => {
         if (!props.graphContainerRef.current) return;
-        
+
         props.setIsTidy(true);
 
         const width = props.graphContainerRef.current.clientWidth;
@@ -71,7 +71,7 @@ export function Controls(props: any) {
             .attr('height', height);
 
         try {
-
+            svg.selectAll('*').remove();
             const allNodes: Node[] = []
             const edges = props.edges.split('\n').map((edge: string) => {
                 const parts = edge.split(' ');
@@ -82,7 +82,7 @@ export function Controls(props: any) {
                 allNodes.push(to);
 
                 return { from, to, weight };
-            }).filter((edge: Edge ) => edge !== undefined);
+            }).filter((edge: Edge) => edge !== undefined);
 
             if (allNodes.length === 0) {
                 console.error('No node found');
@@ -95,66 +95,201 @@ export function Controls(props: any) {
             const visited = new Map();
 
             const hierarchies = allNodes.map(rootNode => {
-                if(visited.has(rootNode))return null
+                if (visited.has(rootNode)) return null
                 return getHierarchyData(rootNode, adjacencyList, visited, -1);
             }).filter(hierarchy => hierarchy !== null)
 
+            const dummyRootName = "dummyRoot#1234567890!@#$%^&*()"
+
+            const dummyRoot = { name: dummyRootName, children: hierarchies };
+            const root = d3.hierarchy<any>(dummyRoot);
             const treeLayout = d3.tree().size([width - margin * 2, height - margin * 2]);
+            treeLayout(root);
 
-            let combinedNodes: any = [];
-            let combinedLinks: any = [];
-
-            hierarchies.forEach((hierarchyData, index) => {
-                const root = d3.hierarchy(hierarchyData);
-                treeLayout(root);
-
-                combinedNodes = combinedNodes.concat(root.descendants());
-                combinedLinks = combinedLinks.concat(root.links());
-            });
+            const combinedNodes = root.descendants().filter(d => d.data.name !== dummyRootName);
+            const combinedLinks = root.links().map(link => {
+                const source = link.source.data.name;
+                const target = link.target.data.name;
+                if(source === dummyRootName || target === dummyRootName) return null;
+                const weight = adjacencyList.get(source)?.find(edge => edge.node === target)?.weight;
             
+                return { source: source, target: target, weight: weight };
+            }).filter(link => link !== null) as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
+
+            combinedNodes.forEach(node => {
+                if (node.parent && node.parent.data.name === dummyRootName) {
+                    node.parent = null;
+                }
+            });
 
             if (props.simulationRef.current) {
                 props.simulationRef.current.stop();
                 props.simulationRef.current = null;
             }
 
-            const simulation = props.simulationRef.current = d3.forceSimulation()
-                .force('link', d3.forceLink().id((d: any) => d.id))
+            props.simulationRef.current = d3.forceSimulation(combinedNodes as any)
                 .force('charge', d3.forceManyBody().strength(-30))
                 .force('collision', d3.forceCollide().radius(nodeRadius + 20))
+                .force('link', d3.forceLink(combinedLinks).distance(90).id((d: any) => d.data.name))
+                .on('tick', ticked)
                 .force('boundary', (alpha) => {
-                    simulation.nodes().forEach((node: any) => {
+                    props.simulationRef.current.nodes().forEach((node: any) => {
                         node.x = Math.max(nodeRadius, Math.min(width - nodeRadius, node.x));
                         node.y = Math.max(nodeRadius, Math.min(height - nodeRadius, node.y));
                     });
                 });
 
-            simulation.nodes(combinedNodes)
-                .on('tick', () => {
-                    nodes.attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
-                    links.attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
-                        .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
-                        .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
-                        .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
-                });
+            let edgesGroup: any = svg.select('.edges');
+            if (edgesGroup.empty()) {
+                edgesGroup = svg.append('g').attr('class', 'edges');
+            }
 
-            simulation.force<any>('link').links(combinedLinks);
+            let nodesGroup: any = svg.select('.nodes');
+            if (nodesGroup.empty()) {
+                nodesGroup = svg.append('g').attr('class', 'nodes');
+            }
 
-            const links = svg.selectAll('.edge')
-                .data(combinedLinks)
+            const lines = edgesGroup.selectAll('line')
+                .data(combinedLinks);
 
-            const nodes = svg.selectAll('.node')
-                .data(combinedNodes)
-                
+            lines.exit().remove();
+
+            lines.enter()
+                .append('line')
+                .attr('class', 'edge')
+                .attr('stroke', 'black')
+                .attr('stroke-width', 2)
+                .merge(lines as any);
+
+            const weights = edgesGroup.selectAll('.edge-weight')
+                .data(combinedLinks);
+
+            weights.exit().remove();
+
+            const weightsEnter = weights.enter()
+                .append('text')
+                .attr('class', 'edge-weight')
+                .attr('fill', 'black')
+                .attr('dy', -10)
+                .merge(weights as any);
+
+            const node = nodesGroup.selectAll('.node')
+                .data(combinedNodes, (d: any) => d.data.name);
+
+            node.exit().remove();
+
+            const nodeEnter = node.enter()
+                .append('g')
+                .attr('class', 'node')
+                .on('click', toggleLock)
+                .call(d3.drag<any, any>()
+                    .on('start', dragStarted)
+                    .on('drag', dragged)
+                    .on('end', dragEnded)
+                );
+
+            nodeEnter.append('circle')
+                .attr('r', nodeRadius)
+                .attr('fill', 'white')
+                .attr('stroke', (d: any) => (d.locked ? 'red' : (props.isColorful ? getRandomHexColor() : 'black')))
+                .attr('stroke-width', 3);
+
+            nodeEnter.append('text')
+                .text((d: any) => d.data.name)
+                .attr('text-anchor', 'middle')
+                .attr('dy', '.35em')
+                .style('pointer-events', 'none');
+
+            nodeEnter.merge(node as any);
+
             lockGraph()
         } catch (e) {
             console.error(e);
             alert(e);
         }
+
+        function ticked() {
+            svg.selectAll('.node')
+                .attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
+
+            svg.selectAll('line')
+                .attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
+                .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
+                .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
+                .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
+
+            svg.selectAll('.edge-weight')
+                .attr('x', function (d: any) {
+                    let midX = (d.source.x + d.target.x) / 2;
+                    let dx = d.target.x - d.source.x;
+                    let dy = d.target.y - d.source.y;
+
+                    let length = Math.sqrt(dx * dx + dy * dy);
+
+                    let normalX = dy / length;
+
+                    let offsetX = midX + 10 * normalX;
+                    if (dx < 0) {
+                        offsetX = midX - 10 * normalX;
+                    }
+
+                    return offsetX;
+                })
+                .attr('y', function (d: any) {
+                    let midY = (d.source.y + d.target.y) / 2;
+                    let dx = d.target.x - d.source.x;
+                    let dy = d.target.y - d.source.y;
+                    let length = Math.sqrt(dx * dx + dy * dy);
+                    let normalY = -dx / length;
+
+                    let offsetY = midY + 10 * normalY;
+                    if (dx < 0) {
+                        offsetY = midY - 10 * normalY;
+                    }
+
+                    return offsetY;
+                })
+                .text((d: any) => {console.log(d);return d.weight});
+        }
+
+        function dragStarted(event: any, d: any) {
+            if (!event.active) props.simulationRef.current.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event: any, d: any) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragEnded(event: any, d: any) {
+            if (!event.active) props.simulationRef.current.alphaTarget(0);
+            if (d.locked) {
+                d.fx = d.x;
+                d.fy = d.y;
+            } else {
+                d.fx = null;
+                d.fy = null;
+            }
+        }
+
+        function toggleLock(event: any, d: any) {
+            d.locked = !d.locked;
+            d3.select(event.currentTarget).select('circle').attr('stroke-width', d.locked ? 5 : 3);
+
+            if (d.locked) {
+                d.fx = d.x;
+                d.fy = d.y;
+            } else {
+                d.fx = null;
+                d.fy = null;
+            }
+        }
     };
 
     const lockGraph = () => {
-        if(!props.graphContainerRef.current)return;
+        if (!props.graphContainerRef.current) return;
         const svg = d3.select(props.graphContainerRef.current);
         const nodes = svg.selectAll('.node')
 
@@ -169,20 +304,20 @@ export function Controls(props: any) {
     }
 
     const unlockGraph = () => {
-        if(!props.graphContainerRef.current)return;
+        if (!props.graphContainerRef.current) return;
         const svg = d3.select(props.graphContainerRef.current);
         const nodes = svg.selectAll('.node')
 
         svg.selectAll('circle')
             .attr("stroke-width", 3)
-            
+
         nodes.each((d: any) => {
             d.locked = false;
             d.fx = null;
             d.fy = null;
         });
     }
-    
+
 
     const renderControls = () => {
         switch (activeTab) {
@@ -244,7 +379,7 @@ export function Controls(props: any) {
                 return null;
         }
     };
-    
+
 
     return (
         <div className="controls">
@@ -267,7 +402,7 @@ export function Controls(props: any) {
             </div>
 
             <div className="interactive">
-            <span>Fun Mode</span>
+                <span>Fun Mode</span>
                 <label className="switch">
                     <input
                         type="checkbox"
