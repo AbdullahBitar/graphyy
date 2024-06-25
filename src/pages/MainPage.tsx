@@ -9,9 +9,10 @@ export function MainPage() {
     const graphContainerRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<any>(null);
     const [edges, setEdges] = useState('');
-    const [isColorful, setIsColorful] = useState(true);
+    const [isColorful, setIsColorful] = useState(false);
     const [isTidy, setIsTidy] = useState(false);
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
+    const [isDirected, setIsDirected] = useState(false);
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -43,6 +44,29 @@ export function MainPage() {
         if (nodesGroup.empty()) {
             nodesGroup = svg.append('g').attr('class', 'nodes');
         }
+
+        let defs = svg.select<SVGDefsElement>('defs');
+        if (defs.empty()) {
+            defs = svg.append('defs');
+        }
+
+        defs.selectAll('#arrowhead')
+            .data([true])
+            .enter()
+            .append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '-0 -5 10 10')
+            .attr('refX', 21)
+            .attr('refY', 0)
+            .attr('orient', 'auto')
+            .attr('markerWidth', 8)
+            .attr('markerHeight', 8)
+            .attr('xoverflow', 'visible')
+            .append('path')
+            .attr('d', 'M 0,-4 L 8 ,0 L 0,4')
+            .attr('fill', '#000')
+            .style('stroke', 'none')
+            .attr('fill-opacity', isDirected ? 1 : 0);
 
         let edgeSet = new Set<Edge>();
         let nodeSet = new Set<Node>();
@@ -113,7 +137,8 @@ export function MainPage() {
             .attr('class', 'edge')
             .attr('stroke', 'black')
             .attr('stroke-width', 2)
-            .merge(lines as any);
+            .merge(lines as any)
+            .attr('marker-end', 'url(#arrowhead)');
 
         const weights = edgesGroup.selectAll('.edge-weight')
             .data(validEdgesArray);
@@ -145,7 +170,7 @@ export function MainPage() {
         nodeEnter.append('circle')
             .attr('r', nodeRadius)
             .attr('fill', 'white')
-            .attr('stroke', (d: any) => (d.locked ? 'red' : (isColorful ? getRandomHexColor() : 'black')))
+            .attr('stroke', (d: any) => (isColorful ? getRandomHexColor() : 'black'))
             .attr('stroke-width', 3);
 
         nodeEnter.append('text')
@@ -164,7 +189,7 @@ export function MainPage() {
                 .attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
                 .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
                 .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
-                .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)));
+                .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)))
 
             svg.selectAll('.edge-weight')
                 .attr('x', function (d: any) {
@@ -238,9 +263,19 @@ export function MainPage() {
 
     }
 
+    const updateArrowVisibility = () => {
+        const svg = d3.select(graphContainerRef.current);
+        svg.select('marker#arrowhead path')
+            .attr('fill-opacity', isDirected ? 1 : 0);
+    };
+
     useEffect(() => {
         drawGraph();
     }, [edges]);
+
+    useEffect(() => {
+        updateArrowVisibility();
+    }, [isDirected]);
 
     return (
         <div className="main-page">
@@ -248,7 +283,7 @@ export function MainPage() {
             <div className="text-box">
                 <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
             </div>
-            <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} />
+            <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
         </div>
     );
 }

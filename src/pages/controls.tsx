@@ -28,6 +28,10 @@ export function Controls(props: any) {
         props.setIsColorful((prev: any) => !prev)
     }
 
+    function toggleDirected() {
+        props.setIsDirected((prev: any) => !prev)
+    }
+
     function setRandomGraph() {
         props.setEdges(generateRandomGraph(graphNodesNum, graphEdgesNum))
     }
@@ -72,6 +76,30 @@ export function Controls(props: any) {
 
         try {
             svg.selectAll('*').remove();
+
+            let defs = svg.select<SVGDefsElement>('defs');
+            if (defs.empty()) {
+                defs = svg.append('defs');
+            }
+
+            defs.selectAll('#arrowhead')
+                .data([true])
+                .enter()
+                .append('marker')
+                .attr('id', 'arrowhead')
+                .attr('viewBox', '-0 -5 10 10')
+                .attr('refX', 21)
+                .attr('refY', 0)
+                .attr('orient', 'auto')
+                .attr('markerWidth', 8)
+                .attr('markerHeight', 8)
+                .attr('xoverflow', 'visible')
+                .append('path')
+                .attr('d', 'M 0,-4 L 8 ,0 L 0,4')
+                .attr('fill', '#000')
+                .style('stroke', 'none')
+                .attr('fill-opacity', props.isDirected ? 1 : 0);
+
             const allNodes: Node[] = []
             const edges = props.edges.split('\n').map((edge: string) => {
                 const parts = edge.split(' ');
@@ -110,9 +138,9 @@ export function Controls(props: any) {
             const combinedLinks = root.links().map(link => {
                 const source = link.source.data.name;
                 const target = link.target.data.name;
-                if(source === dummyRootName || target === dummyRootName) return null;
+                if (source === dummyRootName || target === dummyRootName) return null;
                 const weight = adjacencyList.get(source)?.find(edge => edge.node === target)?.weight;
-            
+
                 return { source: source, target: target, weight: weight };
             }).filter(link => link !== null) as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
 
@@ -159,7 +187,9 @@ export function Controls(props: any) {
                 .attr('class', 'edge')
                 .attr('stroke', 'black')
                 .attr('stroke-width', 2)
-                .merge(lines as any);
+                .merge(lines as any)
+                .attr('marker-end', 'url(#arrowhead)');
+
 
             const weights = edgesGroup.selectAll('.edge-weight')
                 .data(combinedLinks);
@@ -191,7 +221,7 @@ export function Controls(props: any) {
             nodeEnter.append('circle')
                 .attr('r', nodeRadius)
                 .attr('fill', 'white')
-                .attr('stroke', (d: any) => (d.locked ? 'red' : (props.isColorful ? getRandomHexColor() : 'black')))
+                .attr('stroke', (d: any) => (props.isColorful ? getRandomHexColor() : 'black'))
                 .attr('stroke-width', 3);
 
             nodeEnter.append('text')
@@ -249,7 +279,7 @@ export function Controls(props: any) {
 
                     return offsetY;
                 })
-                .text((d: any) => {console.log(d);return d.weight});
+                .text((d: any) => { return d.weight });
         }
 
         function dragStarted(event: any, d: any) {
@@ -401,6 +431,19 @@ export function Controls(props: any) {
                 {renderControls()}
             </div>
 
+            <div className="interactive">
+                <span>Directed graph</span>
+                <label className="switch">
+                    <input
+                        type="checkbox"
+                        checked={props.isDirected}
+                        onChange={() => {
+                            toggleDirected()
+                        }}
+                    />
+                    <span className="slider round"></span>
+                </label>
+            </div>
             <div className="interactive">
                 <span>Fun Mode</span>
                 <label className="switch">
