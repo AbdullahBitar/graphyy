@@ -9,6 +9,12 @@ export function getHierarchyData(node: Node, adjacencyList: Map<Node, outgoingEd
         if (!visited.get(edge.node)) {
             data["children"].push(getHierarchyData(edge.node, adjacencyList, visited, node))
         }
+        else if(edge.node !== parent){
+            data["children"].push({
+                "name": edge.node,
+                "children": []
+            })
+        }
     }
     return data
 }

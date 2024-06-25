@@ -128,13 +128,15 @@ export function Controls(props: any) {
             }).filter(hierarchy => hierarchy !== null)
 
             const dummyRootName = "dummyRoot#1234567890!@#$%^&*()"
-
+            
             const dummyRoot = { name: dummyRootName, children: hierarchies };
             const root = d3.hierarchy<any>(dummyRoot);
             const treeLayout = d3.tree().size([width - margin * 2, height - margin * 2]);
             treeLayout(root);
 
-            const combinedNodes = root.descendants().filter(d => d.data.name !== dummyRootName);
+            const duplicateNodes: Set<Node> = new Set<Node>()
+
+            const combinedNodes = root.descendants().filter(d => d.data.name !== dummyRootName && !duplicateNodes.has(d.data.name) && duplicateNodes.add(d.data.name));
             const combinedLinks = edges.map((edge: any) => {
                 return { source: edge.from, target: edge.to, weight: edge.weight };
             });
