@@ -135,14 +135,9 @@ export function Controls(props: any) {
             treeLayout(root);
 
             const combinedNodes = root.descendants().filter(d => d.data.name !== dummyRootName);
-            const combinedLinks = root.links().map(link => {
-                const source = link.source.data.name;
-                const target = link.target.data.name;
-                if (source === dummyRootName || target === dummyRootName) return null;
-                const weight = adjacencyList.get(source)?.find(edge => edge.node === target)?.weight;
-
-                return { source: source, target: target, weight: weight };
-            }).filter(link => link !== null) as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
+            const combinedLinks = edges.map((edge: any) => {
+                return { source: edge.from, target: edge.to, weight: edge.weight };
+            });
 
             combinedNodes.forEach(node => {
                 if (node.parent && node.parent.data.name === dummyRootName) {
