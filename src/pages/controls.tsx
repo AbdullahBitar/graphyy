@@ -5,12 +5,24 @@ import { defineArrowheadMarker, dragEnded, dragged, dragStarted, drawEdges, draw
 import { generateRandomGraph, generateRandomTree } from '../algorithms/generate-graphs'
 import { getAdjancecyList } from '../algorithms/adjacency-list';
 import { getHierarchyData } from '../algorithms/hierarchy';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { isTree } from '../algorithms/tree-check';
+import { getLCA } from '../algorithms/LCA';
+import { shortestPathBellmanFord } from '../algorithms/bellman-ford';
 
 export function Controls(props: any) {
     const [activeTab, setActiveTab] = useState('graphs');
     const [graphNodesNum, setGraphNodesNum] = useState(10)
     const [graphEdgesNum, setGraphEdgesNum] = useState(10)
     const [treeNodesNum, setTreeNodesNum] = useState(10)
+    const [isEditGraphDropDownOpen, setIsEditGraphDropDownOpen] = useState(false);
+    const [isAlgorithmDropDownOpen, setIsAlgorithmDropDownOpen] = useState(false);
+    const [selectedAlgorithm, setSelectedAlgorithm] = useState<string | null>(null);
+    const [node1, setNode1] = useState<Node>();
+    const [node2, setNode2] = useState<Node>();
+    const [root, setRoot] = useState<Node>();
+    const [result, setResult] = useState<Node>();
 
     function changeColors() {
         const svg = d3.select(props.graphContainerRef)
@@ -134,7 +146,7 @@ export function Controls(props: any) {
             setSimulationForce(props.simulationRef, combinedNodes, combinedLinks, nodeRadius, width, height, () => ticked(svg, nodeRadius, width, height), true);
 
             drawEdges(svg, combinedLinks);
-            
+
             drawNodes(svg, combinedNodes, nodeRadius, props.isColorful, props.simulationRef, true);
 
             lockGraph()
@@ -172,6 +184,104 @@ export function Controls(props: any) {
             d.fx = null;
             d.fy = null;
         });
+    }
+
+    const displayErrorMessage = (message: string) => {
+        toast.error(message, {
+            position: "bottom-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+        });
+    };
+
+    const displayLCA = () => {
+        try {
+            if (props.isDirected) {
+                displayErrorMessage('Make graph undirected');
+                return;
+            }
+            if (!node1 || !node2 || !root) {
+                displayErrorMessage('Please fill all the fields');
+                return;
+            }
+            const nodes = new Set<Node>();
+            const edges = props.edges.split('\n').map((edge: string) => {
+                const parts = edge.split(' ');
+                if (parts.length < 2 || parts.length > 3) return undefined;
+                const [from, to, weight] = parts;
+
+                nodes.add(from);
+                nodes.add(to);
+
+                return { from, to, weight };
+            }).filter((edge: Edge) => edge !== undefined);
+
+            if (!nodes.has(node1)) {
+                displayErrorMessage(`Node ${node1} does not exist in the graph`);
+                return
+            }
+            if (!nodes.has(node2)) {
+                displayErrorMessage(`Node ${node2} does not exist in the graph`);
+                return
+            }
+            if (!nodes.has(root)) {
+                displayErrorMessage(`Node ${root} does not exist in the graph`);
+                return
+            }
+
+            const visited = new Map<Node, boolean>()
+            if (!isTree(node1, getAdjancecyList(edges), visited, node1) || visited.size !== nodes.size) {
+                displayErrorMessage(`The graph should be a single tree`);
+                return;
+            }
+
+            setResult(getLCA(node1, node2, root, getAdjancecyList(edges)))
+        }
+        catch (e) {
+            displayErrorMessage(String(e))
+        }
+    }
+
+    const displayShortestPathWeight = () => {
+        try {
+
+            if (!node1 || !node2) {
+                displayErrorMessage('Please fill all the fields');
+                return;
+            }
+
+            const edges: Edge[] = [];
+            const nodes = new Set<Node>()
+            props.edges.split('\n').forEach((edge: string) => {
+                const parts = edge.split(' ');
+                if (parts.length < 2 || parts.length > 3) return;
+                const [from, to, weight] = parts;
+
+                nodes.add(from);
+                nodes.add(to);
+
+                edges.push({ from, to, weight});
+                
+                if (!props.isDirected) {
+                    edges.push({ from: to, to: from, weight });
+                }
+            });
+            
+            if(!nodes.has(node1) || !nodes.has(node2)){
+                displayErrorMessage(`Node ${!nodes.has(node1) ? node1 : node2} does not exist in the graph`);
+                return
+            }
+
+            setResult(shortestPathBellmanFord(node1, node2, edges, nodes));
+
+        }
+        catch (e) {
+            displayErrorMessage(String(e))
+        }
     }
 
 
@@ -236,6 +346,84 @@ export function Controls(props: any) {
         }
     };
 
+    const renderAlgorithms = () => {
+        switch (selectedAlgorithm) {
+            case 'lca':
+                return (
+                    <div>
+                        <div className="control-item">
+                            <label className="label-text">Root:</label>
+                            <input
+                                type="text"
+                                name="root"
+                                value={root}
+                                onChange={(e) => setRoot(e.target.value.replace(/\s/g, ''))}
+                            />
+                        </div>
+                        <div className="control-item">
+                            <label className="label-text">Node #1:</label>
+                            <input
+                                type="text"
+                                name="node1"
+                                value={node1}
+                                onChange={(e) => setNode1(e.target.value.replace(/\s/g, ''))}
+                            />
+                        </div>
+                        <div className="control-item">
+                            <label className="label-text">Node #2:</label>
+                            <input
+                                type="text"
+                                name="node2"
+                                value={node2}
+                                onChange={(e) => setNode2(e.target.value.replace(/\s/g, ''))}
+                            />
+                        </div>
+                        <div>
+                            {result && <h3>LCA = {result}</h3>}
+                        </div>
+                        <button className="button" onClick={displayLCA}>
+                            Calculate LCA
+                        </button>
+                    </div>
+                );
+            case 'sp':
+                return (
+                    <div>
+                        <div className="control-item">
+                            <label className="label-text">From Node:</label>
+                            <input
+                                type="text"
+                                value={node1}
+                                onChange={(e) => setNode1(e.target.value.replace(/\s/g, ''))}
+                            />
+                        </div>
+                        <div className="control-item">
+                            <label className="label-text">To Node:</label>
+                            <input
+                                type="text"
+                                value={node2}
+                                onChange={(e) => setNode2(e.target.value.replace(/\s/g, ''))}
+                            />
+                        </div>
+                        <div>
+                            {result && <h3>Weight = {result}</h3>}
+                        </div>
+                        <button className="button" onClick={displayShortestPathWeight}>
+                            Calculate Shortest Path Weight
+                        </button>
+                    </div>
+                );
+            case 'mst':
+                return (
+                    <div>
+
+                    </div>
+                )
+            default:
+                return null;
+        }
+    };
+
 
     return (
         <div className="controls">
@@ -284,20 +472,82 @@ export function Controls(props: any) {
                 </label>
             </div>
             <div className="universal-controls">
-                <button className="button" onClick={tidyGraph}>
-                    Tidy graph
-                </button>
+                <div className="dropdown">
+                    <button className="dropdown-toggle button" onClick={() => {
+                        setIsEditGraphDropDownOpen((prev: boolean) => !prev)
+                        if (!isEditGraphDropDownOpen) {
+                            setIsAlgorithmDropDownOpen(false)
+                        }
+                    }}>
+                        Edit Graph
+                    </button>
+                    {isEditGraphDropDownOpen && (
+                        <div className="dropdown-menu">
+                            <button className="button" onClick={() => { tidyGraph(); setIsEditGraphDropDownOpen(false) }}>
+                                Tidy graph
+                            </button>
+                            <button className="button" onClick={() => { lockGraph(); setIsEditGraphDropDownOpen(false) }}>
+                                Lock all nodes
+                            </button>
+                            <button className="button" onClick={() => { unlockGraph(); setIsEditGraphDropDownOpen(false) }}>
+                                Unlock all nodes
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className='universal-controls'>
-                <button className="button" onClick={lockGraph}>
-                    Lock all nodes
-                </button>
+            <div className="universal-controls">
+                <div className="dropdown">
+                    <button className="dropdown-toggle button" onClick={() => {
+                        setIsAlgorithmDropDownOpen((prev: boolean) => !prev)
+                        if (!isAlgorithmDropDownOpen) {
+                            setIsEditGraphDropDownOpen(false)
+                        }
+                    }}>
+                        Apply Algorithm
+                    </button>
+                    {isAlgorithmDropDownOpen && (
+                        <div className="dropdown-menu">
+                            <button className="button" onClick={() => {
+                                setSelectedAlgorithm('lca');
+                                setIsAlgorithmDropDownOpen(false);
+                                setNode1('');
+                                setNode2('');
+                                setRoot('');
+                                setResult('');
+                            }}>
+                                Lowest Common Ancestor
+                            </button>
+                            <button className="button" onClick={() => {
+                                setSelectedAlgorithm('sp');
+                                setIsAlgorithmDropDownOpen(false);
+                                setNode1('');
+                                setNode2('');
+                                setRoot('');
+                                setResult('');
+                            }}>
+                                Shortest Path Weight
+                            </button>
+                            <button className="button" onClick={() => {
+                                setSelectedAlgorithm('mst');
+                                setIsAlgorithmDropDownOpen(false);
+                                setNode1('');
+                                setNode2('');
+                                setRoot('');
+                                setResult('');
+                            }}>
+                                Minimum Spanning Tree
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-            <div className='universal-controls'>
-                <button className="button" onClick={unlockGraph}>
-                    Unlock all nodes
-                </button>
+            <div className="universal-controls">
+                {
+                    renderAlgorithms()
+                }
             </div>
+            <ToastContainer />
         </div>
     );
 }

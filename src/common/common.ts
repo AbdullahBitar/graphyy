@@ -22,6 +22,16 @@ export function getRandomHexColor() {
     return color;
 }
 
+export const getWeight = (weight?: Node): number => {
+    if (typeof weight === 'number') {
+        return weight;
+    } else if (typeof weight === 'string' && !isNaN(parseFloat(weight))) {
+        return parseFloat(weight);
+    } else {
+        return 0;
+    }
+};
+
 export function defineArrowheadMarker(svg: d3.Selection<any, unknown, null, undefined>, isDirected: boolean) {
     let defs = svg.select<SVGDefsElement>('defs');
     if (defs.empty()) {

@@ -2,10 +2,6 @@ import { Edge, Node, outgoingEdge } from "../common/common";
 
 export {};
 
-// function getNumericAdjacencyList(Map<string, number>nodeNumber, ): unknown[][]{
-    
-// }
-
 export function getAdjancecyList(edges: Edge[]): Map<Node, outgoingEdge[]> {
     const adjacencyList: Map<Node, outgoingEdge[]> = new Map()
 
