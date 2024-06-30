@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './controls.css';
 import * as d3 from 'd3';
-import { defineArrowheadMarker, dfs, dragEnded, dragged, dragStarted, drawEdges, drawNodes, Edge, getRandomHexColor, Node, setSimulationForce, ticked, toggleLock } from '../common/common';
+import { defineArrowheadMarker, dfs, dragEnded, dragged, dragStarted, drawEdges, drawNodes, Edge, getRandomHexColor, Node, paintEdgesBlack, setSimulationForce, ticked, toggleLock } from '../common/common';
 import { generateRandomGraph, generateRandomTree } from '../algorithms/generate-graphs'
 import { getAdjancecyList } from '../algorithms/adjacency-list';
 import { getHierarchyData } from '../algorithms/hierarchy';
@@ -147,7 +147,7 @@ export function Controls(props: any) {
 
             setSimulationForce(props.simulationRef, combinedNodes, combinedLinks, nodeRadius, width, height, () => ticked(svg, nodeRadius, width, height), true);
 
-            drawEdges(svg, combinedLinks);
+            drawEdges(svg, combinedLinks, true);
 
             drawNodes(svg, combinedNodes, nodeRadius, props.isColorful, props.simulationRef, true);
 
@@ -278,9 +278,8 @@ export function Controls(props: any) {
                 displayErrorMessage(`Node ${!nodes.has(node1) ? node1 : node2} does not exist in the graph`);
                 return
             }
-
-            setResult(shortestPathBellmanFord(node1, node2, edges, nodes));
-
+            paintEdgesBlack()
+            setResult(shortestPathBellmanFord(node1, node2, edges, nodes, props.isDirected));
         }
         catch (e) {
             displayErrorMessage(String(e))
@@ -473,8 +472,12 @@ export function Controls(props: any) {
                             {result && <h3>Weight = {result}</h3>}
                         </div>
                         <button className="button" onClick={displayShortestPathWeight}>
-                            Calculate Shortest Path Weight
+                            Calculate Shortest Path
                         </button>
+                        <div className="note-box">
+                            <p>If an edge has no weight or a non-numeric weight, it will be treated as having a weight of 1.</p>
+                        </div>
+
                     </div>
                 );
             case 'mst':
@@ -587,6 +590,7 @@ export function Controls(props: any) {
                                 setNode2('');
                                 setRoot('');
                                 setResult(undefined);
+                                paintEdgesBlack()
                             }}>
                                 Lowest Common Ancestor
                             </button>
@@ -597,8 +601,9 @@ export function Controls(props: any) {
                                 setNode2('');
                                 setRoot('');
                                 setResult(undefined);
+                                paintEdgesBlack()
                             }}>
-                                Shortest Path Weight
+                                Shortest Path
                             </button>
                             <button className="button" onClick={() => {
                                 setSelectedAlgorithm('mst');
@@ -607,6 +612,7 @@ export function Controls(props: any) {
                                 setNode2('');
                                 setRoot('');
                                 setResult(undefined);
+                                paintEdgesBlack()
                             }}>
                                 Minimum Spanning Tree
                             </button>

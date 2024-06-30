@@ -1,7 +1,7 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import './MainPage.css';
 import * as d3 from 'd3';
-import { Edge, Node, defineArrowheadMarker, dragEnded, dragStarted, dragged, drawEdges, drawNodes, getRandomHexColor, setSimulationForce, ticked, toggleLock } from '../common/common';
+import { Edge, Node, defineArrowheadMarker, dragEnded, dragStarted, dragged, drawEdges, drawNodes, getRandomHexColor, paintEdgesBlack, setSimulationForce, ticked, toggleLock } from '../common/common';
 import Controls from './controls';
 
 export function MainPage() {
@@ -20,6 +20,8 @@ export function MainPage() {
 
     const drawGraph = () => {
         if (!graphContainerRef.current) return;
+
+        paintEdgesBlack();
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         const nodeRadius = 20;

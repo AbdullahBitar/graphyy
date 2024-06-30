@@ -28,7 +28,7 @@ export const getWeight = (weight?: Node): number => {
     } else if (typeof weight === 'string' && !isNaN(parseFloat(weight))) {
         return parseFloat(weight);
     } else {
-        return 0;
+        return 1;
     }
 };
 
@@ -40,6 +40,10 @@ export function dfs(node: Node, adjacencyList: Map<Node, outgoingEdge[]>, visite
             dfs(edge.node, adjacencyList, visited);
         }
     }
+}
+
+export function paintEdgesBlack() {
+    d3.selectAll('.edge').attr('stroke', 'black');
 }
 
 export function defineArrowheadMarker(svg: d3.Selection<any, unknown, null, undefined>, isDirected: boolean) {
@@ -168,7 +172,7 @@ export function toggleLock(event: any, d: any) {
     }
 }
 
-export function drawEdges(svg: any, EdgesArray: any) {
+export function drawEdges(svg: any, EdgesArray: any, isTidy: boolean = false) {
     let edgesGroup: any = svg.select('.edges');
     if (edgesGroup.empty()) {
         edgesGroup = svg.append('g').attr('class', 'edges');
@@ -185,7 +189,8 @@ export function drawEdges(svg: any, EdgesArray: any) {
         .attr('stroke', 'black')
         .attr('stroke-width', 2)
         .merge(lines as any)
-        .attr('marker-end', 'url(#arrowhead)');
+        .attr('marker-end', 'url(#arrowhead)')
+        .attr('id', (d: any) => `edge-${(isTidy ? d.source.data.name: d.source.id )}-${(isTidy ? d.target.data.name: d.target.id )}`)
 
     const weights = edgesGroup.selectAll('.edge-weight')
         .data(EdgesArray);
