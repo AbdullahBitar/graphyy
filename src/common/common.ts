@@ -32,6 +32,16 @@ export const getWeight = (weight?: Node): number => {
     }
 };
 
+export function dfs(node: Node, adjacencyList: Map<Node, outgoingEdge[]>, visited: Map<Node, boolean>) {
+    visited.set(node, true);
+
+    for (const edge of adjacencyList.get(node) || []) {
+        if (!visited.get(edge.node)) {
+            dfs(edge.node, adjacencyList, visited);
+        }
+    }
+}
+
 export function defineArrowheadMarker(svg: d3.Selection<any, unknown, null, undefined>, isDirected: boolean) {
     let defs = svg.select<SVGDefsElement>('defs');
     if (defs.empty()) {

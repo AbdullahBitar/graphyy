@@ -47,13 +47,14 @@ hr {
     align-items: center;
 }
 
-.label-text {
-    margin-right: 10px;
-}
-
-.switch-container {
+.interactiveNoBorders {
+    padding-top: 20px;
     display: flex;
     align-items: center;
+}
+
+.label-text {
+    margin-right: 10px;
 }
 
 .switch {
@@ -192,4 +193,9 @@ input:checked+.slider:before {
 .control-item input {
     flex: 1; 
     max-width: 160px;
+}
+
+.margin-up-bottom {
+    margin-top: 20px;
+    margin-bottom: 20px;
 }

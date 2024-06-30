@@ -1,17 +1,20 @@
 import { Edge, Node } from "../common/common";
 export { };
 
-export const generateRandomTree = (numberOfNodes: number) => {
+export const generateRandomTree = (numberOfNodes: number, genWeight: boolean) => {
     let edges: string = ""
     for (let i = 2; i <= numberOfNodes; i++) {
         const randomNode = Math.floor(Math.random() * (i - 1)) + 1;
-        edges += `${i} ${randomNode}\n`
+        if(genWeight)
+            edges += `${i} ${randomNode} ${Math.floor(Math.random() * (10)) + 1}\n`
+        else
+            edges += `${i} ${randomNode}\n`
     }
     if(numberOfNodes == 1)edges += '1'
     return edges
 }
 
-export const generateRandomGraph = (numberOfNodes: number, numberOfEdges: number) => {
+export const generateRandomGraph = (numberOfNodes: number, numberOfEdges: number, genWeight: boolean) => {
 
     if(numberOfEdges > numberOfNodes * (numberOfNodes - 1) / 2)return ""
 
@@ -36,7 +39,10 @@ export const generateRandomGraph = (numberOfNodes: number, numberOfEdges: number
         edgeSet.add(`${i}-${randomNode}`)
         edgeSet.add(`${randomNode}-${i}`)
 
-        edges += `${i} ${randomNode}\n`
+        if(genWeight)
+            edges += `${i} ${randomNode} ${Math.floor(Math.random() * (10)) + 1}\n`
+        else
+            edges += `${i} ${randomNode}\n`
     }
 
     for(let i = 1 ; i <= numberOfNodes ; i++){

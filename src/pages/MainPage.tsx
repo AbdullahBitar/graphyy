@@ -41,10 +41,10 @@ export function MainPage() {
         let nodeSet = new Set<Node>();
 
         edges.split('\n').forEach(edge => {
-            const numOfInputs = edge.split(' ').length;
+            const numOfInputs = edge.trim().split(' ').length;
             if (numOfInputs < 1 || numOfInputs > 3) return;
 
-            const [from, to, weight] = edge.split(' ');
+            const [from, to, weight] = edge.trim().split(' ');
 
             if (from) {
                 nodeSet.add(from);

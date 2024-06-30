@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './controls.css';
 import * as d3 from 'd3';
-import { defineArrowheadMarker, dragEnded, dragged, dragStarted, drawEdges, drawNodes, Edge, getRandomHexColor, Node, setSimulationForce, ticked, toggleLock } from '../common/common';
+import { defineArrowheadMarker, dfs, dragEnded, dragged, dragStarted, drawEdges, drawNodes, Edge, getRandomHexColor, Node, setSimulationForce, ticked, toggleLock } from '../common/common';
 import { generateRandomGraph, generateRandomTree } from '../algorithms/generate-graphs'
 import { getAdjancecyList } from '../algorithms/adjacency-list';
 import { getHierarchyData } from '../algorithms/hierarchy';
@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { isTree } from '../algorithms/tree-check';
 import { getLCA } from '../algorithms/LCA';
 import { shortestPathBellmanFord } from '../algorithms/bellman-ford';
+import { kruskal } from '../algorithms/mst';
 
 export function Controls(props: any) {
     const [activeTab, setActiveTab] = useState('graphs');
@@ -22,7 +23,8 @@ export function Controls(props: any) {
     const [node1, setNode1] = useState<Node>();
     const [node2, setNode2] = useState<Node>();
     const [root, setRoot] = useState<Node>();
-    const [result, setResult] = useState<Node>();
+    const [result, setResult] = useState<Node | undefined>(undefined);
+    const [genWeight, setGenWeight] = useState<boolean>(false);
 
     function changeColors() {
         const svg = d3.select(props.graphContainerRef)
@@ -45,10 +47,10 @@ export function Controls(props: any) {
     }
 
     function setRandomGraph() {
-        props.setEdges(generateRandomGraph(graphNodesNum, graphEdgesNum))
+        props.setEdges(generateRandomGraph(graphNodesNum, graphEdgesNum, genWeight))
     }
     function setRandomTree() {
-        props.setEdges(generateRandomTree(treeNodesNum))
+        props.setEdges(generateRandomTree(treeNodesNum, genWeight))
     }
 
     const handleGraphNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,8 +94,8 @@ export function Controls(props: any) {
             defineArrowheadMarker(svg, props.isDirected);
 
             const allNodes: Node[] = []
-            const edges = props.edges.split('\n').map((edge: string) => {
-                const parts = edge.split(' ');
+            const edges = props.edges.trim().split('\n').map((edge: string) => {
+                const parts = edge.trim().split(' ');
                 if (parts.length < 2 || parts.length > 3) return undefined;
                 const [from, to, weight] = parts;
 
@@ -187,6 +189,7 @@ export function Controls(props: any) {
     }
 
     const displayErrorMessage = (message: string) => {
+        setResult(undefined)
         toast.error(message, {
             position: "bottom-right",
             autoClose: 3000,
@@ -209,8 +212,8 @@ export function Controls(props: any) {
                 return;
             }
             const nodes = new Set<Node>();
-            const edges = props.edges.split('\n').map((edge: string) => {
-                const parts = edge.split(' ');
+            const edges = props.edges.trim().split('\n').map((edge: string) => {
+                const parts = edge.trim().split(' ');
                 if (parts.length < 2 || parts.length > 3) return undefined;
                 const [from, to, weight] = parts;
 
@@ -256,28 +259,63 @@ export function Controls(props: any) {
 
             const edges: Edge[] = [];
             const nodes = new Set<Node>()
-            props.edges.split('\n').forEach((edge: string) => {
-                const parts = edge.split(' ');
+            props.edges.trim().split('\n').forEach((edge: string) => {
+                const parts = edge.trim().split(' ');
                 if (parts.length < 2 || parts.length > 3) return;
                 const [from, to, weight] = parts;
 
                 nodes.add(from);
                 nodes.add(to);
 
-                edges.push({ from, to, weight});
-                
+                edges.push({ from, to, weight });
+
                 if (!props.isDirected) {
                     edges.push({ from: to, to: from, weight });
                 }
             });
-            
-            if(!nodes.has(node1) || !nodes.has(node2)){
+
+            if (!nodes.has(node1) || !nodes.has(node2)) {
                 displayErrorMessage(`Node ${!nodes.has(node1) ? node1 : node2} does not exist in the graph`);
                 return
             }
 
             setResult(shortestPathBellmanFord(node1, node2, edges, nodes));
 
+        }
+        catch (e) {
+            displayErrorMessage(String(e))
+        }
+    }
+
+    const displayMSTWeight = () => {
+        try {
+            if (props.isDirected) {
+                displayErrorMessage('Graph needs to be undirected')
+                return;
+            }
+
+            const nodes = new Set<Node>()
+            let root = null
+            const edges = props.edges.trim().split('\n').map((edge: string) => {
+                const parts = edge.trim().split(' ')
+                if (parts.length < 2 || parts.length > 3) return undefined
+                const [from, to, weight] = parts
+
+                root = from
+
+                nodes.add(from)
+                nodes.add(to)
+
+                return { from, to, weight }
+            }).filter((edge: Edge) => edge !== undefined)
+
+            const visited: Map<Node, boolean> = new Map()
+            if (root) dfs(root, getAdjancecyList(edges), visited)
+            if (visited.size !== nodes.size) {
+                displayErrorMessage('Graph needs to be connected')
+                return
+            }
+            setResult(kruskal(edges, nodes))
         }
         catch (e) {
             displayErrorMessage(String(e))
@@ -315,6 +353,19 @@ export function Controls(props: any) {
                                 onChange={handleGraphEdgeCountChange}
                             />
                         </div>
+                        <div className="margin-up-bottom">
+                            <label className="label-text">Weights</label>
+                            <label className="switch">
+                                <input
+                                    type="checkbox"
+                                    checked={genWeight}
+                                    onChange={() => {
+                                        setGenWeight((prev: boolean) => !prev)
+                                    }}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
                         <button className="button" onClick={setRandomGraph}>
                             Generate Random Graph
                         </button>
@@ -335,6 +386,19 @@ export function Controls(props: any) {
                                 value={treeNodesNum}
                                 onChange={handleTreeNodeCountChange}
                             />
+                        </div>
+                        <div className="margin-up-bottom">
+                            <label className="label-text">Weights</label>
+                            <label className="switch">
+                                <input
+                                    type="checkbox"
+                                    checked={genWeight}
+                                    onChange={() => {
+                                        setGenWeight((prev: boolean) => !prev)
+                                    }}
+                                />
+                                <span className="slider"></span>
+                            </label>
                         </div>
                         <button className="button" onClick={setRandomTree}>
                             Generate Random Tree
@@ -416,7 +480,12 @@ export function Controls(props: any) {
             case 'mst':
                 return (
                     <div>
-
+                        <button className="button" onClick={displayMSTWeight}>
+                            Calculate MST weight
+                        </button>
+                        <div>
+                            {result !== undefined && <h3>Weight = {result}</h3>}
+                        </div>
                     </div>
                 )
             default:
@@ -424,6 +493,9 @@ export function Controls(props: any) {
         }
     };
 
+    useEffect(() => {
+        setResult(undefined)
+    }, [props.edges]);
 
     return (
         <div className="controls">
@@ -514,7 +586,7 @@ export function Controls(props: any) {
                                 setNode1('');
                                 setNode2('');
                                 setRoot('');
-                                setResult('');
+                                setResult(undefined);
                             }}>
                                 Lowest Common Ancestor
                             </button>
@@ -524,7 +596,7 @@ export function Controls(props: any) {
                                 setNode1('');
                                 setNode2('');
                                 setRoot('');
-                                setResult('');
+                                setResult(undefined);
                             }}>
                                 Shortest Path Weight
                             </button>
@@ -534,7 +606,7 @@ export function Controls(props: any) {
                                 setNode1('');
                                 setNode2('');
                                 setRoot('');
-                                setResult('');
+                                setResult(undefined);
                             }}>
                                 Minimum Spanning Tree
                             </button>
