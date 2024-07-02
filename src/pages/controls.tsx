@@ -225,15 +225,15 @@ export function Controls(props: any) {
             }).filter((edge: Edge) => edge !== undefined);
 
             if (!nodes.has(node1)) {
-                displayErrorMessage(`Node ${node1} does not exist in the graph`);
+                displayErrorMessage(`Node '${node1}' does not exist in the graph`);
                 return
             }
             if (!nodes.has(node2)) {
-                displayErrorMessage(`Node ${node2} does not exist in the graph`);
+                displayErrorMessage(`Node '${node2}' does not exist in the graph`);
                 return
             }
             if (!nodes.has(root)) {
-                displayErrorMessage(`Node ${root} does not exist in the graph`);
+                displayErrorMessage(`Node '${root}' does not exist in the graph`);
                 return
             }
 
@@ -276,7 +276,7 @@ export function Controls(props: any) {
             });
 
             if (!nodes.has(node1) || !nodes.has(node2)) {
-                displayErrorMessage(`Node ${!nodes.has(node1) ? node1 : node2} does not exist in the graph`);
+                displayErrorMessage(`Node '${!nodes.has(node1) ? node1 : node2}' does not exist in the graph`);
                 return
             }
             paintEdgesBlack()

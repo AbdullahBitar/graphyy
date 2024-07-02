@@ -215,3 +215,7 @@ input:checked+.slider:before {
     font-size: 17px;
     text-align: center;
 }
+
+div h3{
+    margin-top: 20px;
+}
