@@ -27,8 +27,6 @@ export function MainPage() {
         const nodeRadius = 20;
 
         const svg = d3.select(graphContainerRef.current)
-            .attr('width', width)
-            .attr('height', height);
 
         if (isTidy) {
             simulationRef.current?.stop();
