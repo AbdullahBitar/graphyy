@@ -101,14 +101,20 @@ export function MainPage() {
     }, [isDirected]);
 
     return (
-        <div className="main-page">
-            <svg ref={graphContainerRef} className="graph-container"></svg>
-            <div className="text-box">
-                <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+        <div>
+            <div className="header">
+                <h1>graphyy</h1>
             </div>
-            <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
+            <div className="main-page">
+                <svg ref={graphContainerRef} className="graph-container"></svg>
+                <div className="text-box">
+                    <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                </div>
+                <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
+            </div>
         </div>
     );
+    
 }
 
 export default MainPage;

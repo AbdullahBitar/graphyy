@@ -44,6 +44,7 @@ export function Controls(props: any) {
 
     function toggleDirected() {
         props.setIsDirected((prev: boolean) => !prev)
+        paintEdgesBlack()
     }
 
     function setRandomGraph() {
@@ -488,6 +489,9 @@ export function Controls(props: any) {
                         </button>
                         <div>
                             {result !== undefined && <h3>Weight = {result}</h3>}
+                        </div>
+                        <div className="note-box">
+                            <p>If an edge has no weight or a non-numeric weight, it will be treated as having a weight of 1.</p>
                         </div>
                     </div>
                 )
