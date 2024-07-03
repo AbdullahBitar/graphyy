@@ -68,3 +68,13 @@ circle:hover {
     cursor: pointer;
 }
 
+@media (max-width: 800px) {
+    .graph-container {
+        height:50vh;
+        width:100%;
+    }
+    .text-box {
+        width:100%;
+        margin-bottom: 10px;
+    }
+}

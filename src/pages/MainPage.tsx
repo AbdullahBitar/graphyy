@@ -103,7 +103,7 @@ export function MainPage() {
             <div className="header">
                 <h1>graphyy</h1>
             </div>
-            <div className="main-page">
+            <div className="main-page row">
                 <svg ref={graphContainerRef} className="graph-container"></svg>
                 <div className="text-box">
                     <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
@@ -112,7 +112,7 @@ export function MainPage() {
             </div>
         </div>
     );
-    
+
 }
 
 export default MainPage;

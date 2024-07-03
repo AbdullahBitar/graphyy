@@ -219,3 +219,15 @@ input:checked+.slider:before {
 div h3{
     margin-top: 20px;
 }
+
+@media (max-width: 800px) {
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .controls {
+        width: 100%;
+    }
+}
