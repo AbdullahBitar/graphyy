@@ -8,7 +8,7 @@ export function MainPage() {
 
     const graphContainerRef = useRef<SVGSVGElement>(null);
     const simulationRef = useRef<any>(null);
-    const [edges, setEdges] = useState('');
+    const [edges, setEdges] = useState('1 2 1\n1 3');
     const [isColorful, setIsColorful] = useState(false);
     const [isTidy, setIsTidy] = useState(false);
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
