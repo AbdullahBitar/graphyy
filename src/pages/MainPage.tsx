@@ -1,8 +1,9 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import './MainPage.css';
 import * as d3 from 'd3';
-import { Edge, Node, defineArrowheadMarker, dragEnded, dragStarted, dragged, drawEdges, drawNodes, getRandomHexColor, paintEdgesBlack, setSimulationForce, ticked, toggleLock } from '../common/common';
+import { Edge, Node, defineArrowheadMarker, drawEdges, drawNodes, paintEdgesBlack, setSimulationForce, ticked } from '../common/common';
 import Controls from './controls';
+import { useWindowSize } from '../common/WindowSize'
 
 export function MainPage() {
 
@@ -13,6 +14,7 @@ export function MainPage() {
     const [isTidy, setIsTidy] = useState(false);
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
     const [isDirected, setIsDirected] = useState(false);
+    const [width] = useWindowSize();
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -98,21 +100,35 @@ export function MainPage() {
         updateArrowVisibility();
     }, [isDirected]);
 
+
     return (
         <div>
             <div className="header">
                 <h1>graphyy</h1>
             </div>
-            <div className="main-page row">
-                <svg ref={graphContainerRef} className="graph-container"></svg>
-                <div className="text-box">
-                    <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+            {width > 800 ? (
+                <div className="main-page row">
+                    <svg ref={graphContainerRef} className="graph-container"></svg>
+                    <div className="text-box">
+                        <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                    </div>
+                    <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
                 </div>
-                <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
-            </div>
+            ) : (
+                <div className="main-page row">
+                    <svg ref={graphContainerRef} className="graph-container"></svg>
+                    <div className="row2">
+                        <div className="text-box">
+                            <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                        </div>
+                        <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
+                    </div>
+                </div>
+            )
+
+            }
         </div>
     );
 
 }
 
-export default MainPage;

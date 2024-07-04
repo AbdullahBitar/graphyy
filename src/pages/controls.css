@@ -226,6 +226,10 @@ div h3{
         flex-wrap: wrap;
         justify-content: space-between;
     }
+    .row2 {
+        display: flex;
+        justify-content: space-between;
+    }
 
     .controls {
         width: 100%;
