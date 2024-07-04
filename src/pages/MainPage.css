@@ -68,7 +68,7 @@ circle:hover {
     cursor: pointer;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 900px) {
     .graph-container {
         height:50vh;
         width:100%;

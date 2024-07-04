@@ -525,7 +525,7 @@ export function Controls(props: any) {
             </div>
 
             <div className="interactive">
-                <span>Directed graph</span>
+                <span>Directed</span>
                 <label className="switch">
                     <input
                         type="checkbox"
