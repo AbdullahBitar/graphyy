@@ -75,7 +75,7 @@ circle:hover {
         min-width: 300px; 
     }
     .text-box {
-        width:100%;
+        width:40%;
         margin-bottom: 10px;
     }
 }

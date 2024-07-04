@@ -183,7 +183,6 @@ input:checked+.slider:before {
 }
 
 .control-item {
-    display: flex;
     align-items: center;
     margin-bottom: 10px;
     margin-top: 20px;
@@ -196,7 +195,6 @@ input:checked+.slider:before {
 }
 
 .control-item input {
-    flex: 1; 
     max-width: 160px;
 }
 
