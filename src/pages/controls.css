@@ -1,8 +1,7 @@
 .controls {
-    width: 20%;
+    width: 400px;
     background-color: #ffffff;
     border: 1px solid #ddd;
-    margin: 20px;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: auto;
@@ -228,7 +227,9 @@ div h3{
         display: flex;
         justify-content: space-between;
     }
+}
 
+@media screen and (max-width: 1103px) {
     .controls {
         width: 100%;
     }

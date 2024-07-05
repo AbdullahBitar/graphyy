@@ -4,27 +4,38 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
+.content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f0f0f0;
+    height: 100%;
 }
 
 .main-page {
+    flex-grow: 1;
     display: flex;
-    height: 90vh;
+    justify-content: space-evenly;
+    padding: 12px;
+    column-gap: 16px;
+    row-gap: 16px;
+    flex-wrap: wrap;
 }
 
 .graph-container {
-    flex: 1;
+    flex-grow: 8;
     background-color: #ffffff;
     border: 1px solid #ddd;
-    margin: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.graph-container svg {
-    width: 100%;
-    height: 100%;
+    min-width: 400px;
 }
 
 @font-face {
@@ -46,36 +57,41 @@ body {
     margin-top: 0;
 }
 
-.text-box {
-    width: 15%;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    margin: 20px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 .text-input {
-    width: 100%;
-    height: 100%;
+    flex-grow: 1;
     resize: none;
     font-size: 16px;
     border: none;
     outline: none;
+    padding: 16px;
+    height: 100%;
+    overflow: hidden;
 }
 
 circle:hover {
     cursor: pointer;
 }
 
-@media (max-width: 900px) {
-    .graph-container {
-        height:50vh;
-        width:100%;
-        min-width: 300px; 
+@media screen and (max-width: 1103px) {
+    .main-page > *{
+        height: 500px;
     }
-    .text-box {
-        width:40%;
-        margin-bottom: 10px;
+}
+
+@media screen and (max-width: 700px) {
+    .main-page > * {
+        height: auto;
+    }
+
+    .main-page {
+        flex-direction: column;
+        row-gap: 12px;
+        padding: 12px;
+        width: 100%;
+        height: auto;
+    }
+
+    .graph-container{
+        height: 400px;
     }
 }

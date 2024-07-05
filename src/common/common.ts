@@ -92,6 +92,18 @@ export function setSimulationForce(simulationRef: any, nodesArray: any, validEdg
     }
 }
 
+export function resetNodesPos(simulationRef: any, width: number, height: number) {
+    if(!simulationRef.current)
+        return
+
+    const simulation = simulationRef.current;
+    simulation.nodes().forEach((node: any) => {
+        node.x = width/2;
+        node.y = height/2;
+    })
+    simulation.alpha(1).restart();
+}
+
 export function ticked(svg: any, nodeRadius: number, width: number, height: number) {
     svg.selectAll('.node')
         .attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
