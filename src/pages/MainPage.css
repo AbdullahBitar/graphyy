@@ -4,20 +4,33 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
+.content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f0f0f0;
+    height: 100%;
 }
 
 .main-page {
-    padding: 20px;
+    flex-grow: 1;
     display: flex;
     justify-content: space-evenly;
-    height: 90vh;
+    height: 100%;
+    padding: 16px;
+    column-gap: 16px;
 }
 
 .graph-container {
-    flex-grow: 4;
+    flex-grow: 8;
     background-color: #ffffff;
     border: 1px solid #ddd;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -48,8 +61,23 @@ body {
     font-size: 16px;
     border: none;
     outline: none;
+    padding: 8px;
+    height: 100%;
 }
 
 circle:hover {
     cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+    .main-page {
+        flex-direction: column;
+        row-gap: 6px;
+        padding: 6px;
+        width: 100%
+    }
+
+    .graph-container{
+        height: 400px;
+    }
 }
