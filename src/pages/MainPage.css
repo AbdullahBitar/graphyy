@@ -85,7 +85,6 @@ circle:hover {
     }
 
     .main-page {
-        flex-direction: column;
         row-gap: 12px;
         padding: 12px;
         width: 100%;
