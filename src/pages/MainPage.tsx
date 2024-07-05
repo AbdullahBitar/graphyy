@@ -1,4 +1,5 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
+import TextareaAutosize from 'react-textarea-autosize'
 import './MainPage.css';
 import * as d3 from 'd3';
 import { Edge, Node, defineArrowheadMarker, drawEdges, drawNodes, paintEdgesBlack, setSimulationForce, ticked } from '../common/common';
@@ -108,7 +109,11 @@ export function MainPage() {
             </div>
             <div className="main-page">
                 <svg ref={graphContainerRef} className="graph-container"></svg>
-                <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                {
+                    width <= 600 ?
+                        <TextareaAutosize className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} minRows={4} ></TextareaAutosize>
+                        : <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                }
                 <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
             </div>
         </div>
