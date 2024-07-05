@@ -106,7 +106,7 @@ export function MainPage() {
             <div className="header">
                 <h1>graphyy</h1>
             </div>
-            {width > 800 ? (
+            {width > 900 ? (
                 <div className="main-page row">
                     <svg ref={graphContainerRef} className="graph-container"></svg>
                     <div className="text-box">
