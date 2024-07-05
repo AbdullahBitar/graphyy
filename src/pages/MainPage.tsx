@@ -102,7 +102,7 @@ export function MainPage() {
 
 
     return (
-        <div>
+        <div className="content">
             <div className="header">
                 <h1>graphyy</h1>
             </div>
