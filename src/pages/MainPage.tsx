@@ -106,27 +106,11 @@ export function MainPage() {
             <div className="header">
                 <h1>graphyy</h1>
             </div>
-            {width > 900 ? (
-                <div className="main-page row">
-                    <svg ref={graphContainerRef} className="graph-container"></svg>
-                    <div className="text-box">
-                        <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
-                    </div>
-                    <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
-                </div>
-            ) : (
-                <div className="main-page row">
-                    <svg ref={graphContainerRef} className="graph-container"></svg>
-                    <div className="row2">
-                        <div className="text-box">
-                            <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
-                        </div>
-                        <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
-                    </div>
-                </div>
-            )
-
-            }
+            <div className="main-page">
+                <svg ref={graphContainerRef} className="graph-container"></svg>
+                <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
+                <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
+            </div>
         </div>
     );
 
