@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import TextareaAutosize from 'react-textarea-autosize'
 import './MainPage.css';
 import * as d3 from 'd3';
-import { Edge, Node, defineArrowheadMarker, drawEdges, drawNodes, paintEdgesBlack, setSimulationForce, ticked } from '../common/common';
+import { Edge, Node, defineArrowheadMarker, drawEdges, drawNodes, paintEdgesBlack, setSimulationForce, ticked, resetNodesPos } from '../common/common';
 import Controls from './controls';
 import { useWindowSize } from '../common/WindowSize'
 
@@ -101,6 +101,10 @@ export function MainPage() {
         updateArrowVisibility();
     }, [isDirected]);
 
+    useEffect(() => {
+        if(graphContainerRef.current)
+            resetNodesPos(simulationRef, graphContainerRef.current?.clientWidth, graphContainerRef.current?.clientHeight)
+    }, [width])
 
     return (
         <div className="content">
@@ -110,7 +114,7 @@ export function MainPage() {
             <div className="main-page">
                 <svg ref={graphContainerRef} className="graph-container"></svg>
                 {
-                    width <= 600 ?
+                    width <= 700 ?
                         <TextareaAutosize className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></TextareaAutosize>
                         : <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
                 }
