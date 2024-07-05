@@ -48,31 +48,38 @@ export function Controls(props: any) {
     }
 
     function setRandomGraph() {
+        if(graphNodesNum < 1) {
+            displayErrorMessage('Number of nodes must be at least 1');
+            return;
+        }
+        const maxEdges = graphNodesNum * (graphNodesNum - 1) / 2;
+        if(graphEdgesNum > maxEdges) {
+            displayErrorMessage(`Number of edges can be at most ${maxEdges} (complete graph)`);
+            return;
+        }
         props.setEdges(generateRandomGraph(graphNodesNum, graphEdgesNum, genWeight))
     }
     function setRandomTree() {
+        if(treeNodesNum < 1) {
+            displayErrorMessage('Number of nodes must be at least 1');
+            return;
+        }
         props.setEdges(generateRandomTree(treeNodesNum, genWeight))
     }
 
     const handleGraphNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.valueAsNumber;
-        setGraphNodesNum(value > 0 ? value : 1);
-        const maxEdges = value * (value - 1) / 2;
-        if (graphEdgesNum > maxEdges) {
-            setGraphEdgesNum(maxEdges);
-        }
+        setGraphNodesNum(value);
     };
 
     const handleTreeNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.valueAsNumber;
-        setTreeNodesNum(value > 0 ? value : 1);
+        setTreeNodesNum(value);
     };
 
     const handleGraphEdgeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.valueAsNumber;
-        const maxNumOfEdges = graphNodesNum * (graphNodesNum - 1) / 2
-        if (value < 0) setGraphEdgesNum(1);
-        else setGraphEdgesNum(value <= maxNumOfEdges ? value : maxNumOfEdges);
+        setGraphEdgesNum(value);
     };
 
     const tidyGraph = () => {
