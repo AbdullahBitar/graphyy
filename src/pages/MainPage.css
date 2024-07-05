@@ -66,6 +66,7 @@ body {
     padding: 16px;
     height: 100%;
     overflow: hidden;
+    width: 10%;
 }
 
 circle:hover {
@@ -93,5 +94,9 @@ circle:hover {
 
     .graph-container{
         height: 400px;
+    }
+
+    .text-input {
+        width: 100%;
     }
 }
