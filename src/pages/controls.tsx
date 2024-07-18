@@ -104,6 +104,9 @@ export function Controls(props: any) {
             const allNodes: Node[] = []
             const edges = props.edges.trim().split('\n').map((edge: string) => {
                 const parts = edge.trim().split(' ');
+                if(parts.length === 1 && parts[0]){
+                    allNodes.push(parts[0])
+                }
                 if (parts.length < 2 || parts.length > 3) return undefined;
                 const [from, to, weight] = parts;
 
@@ -222,6 +225,9 @@ export function Controls(props: any) {
             const nodes = new Set<Node>();
             const edges = props.edges.trim().split('\n').map((edge: string) => {
                 const parts = edge.trim().split(' ');
+                if(parts.length === 1 && parts[0]){
+                    nodes.add(parts[0])
+                }
                 if (parts.length < 2 || parts.length > 3) return undefined;
                 const [from, to, weight] = parts;
 
@@ -269,6 +275,9 @@ export function Controls(props: any) {
             const nodes = new Set<Node>()
             props.edges.trim().split('\n').forEach((edge: string) => {
                 const parts = edge.trim().split(' ');
+                if(parts.length === 1 && parts[0]){
+                    nodes.add(parts[0])
+                }
                 if (parts.length < 2 || parts.length > 3) return;
                 const [from, to, weight] = parts;
 
@@ -305,6 +314,9 @@ export function Controls(props: any) {
             let root = null
             const edges = props.edges.trim().split('\n').map((edge: string) => {
                 const parts = edge.trim().split(' ')
+                if(parts.length === 1 && parts[0]){
+                    nodes.add(parts[0])
+                }
                 if (parts.length < 2 || parts.length > 3) return undefined
                 const [from, to, weight] = parts
 
@@ -316,12 +328,6 @@ export function Controls(props: any) {
                 return { from, to, weight }
             }).filter((edge: Edge) => edge !== undefined)
 
-            const visited: Map<Node, boolean> = new Map()
-            if (root) dfs(root, getAdjancecyList(edges), visited)
-            if (visited.size !== nodes.size) {
-                displayErrorMessage('Graph needs to be connected')
-                return
-            }
             setResult(kruskal(edges, nodes))
         }
         catch (e) {
