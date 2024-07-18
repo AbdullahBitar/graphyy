@@ -70,6 +70,11 @@ export function MainPage() {
 
         setAllNodes(new Map(allNodes))
 
+        if(nodeSet.size > 500) {
+            svg.selectAll('*').remove();
+            return;
+        }
+
         let nodesArray = Array.from(allNodes.values())
 
         let edgesArray = Array.from(edgeSet).map(edge => ({
