@@ -121,6 +121,11 @@ export function Controls(props: any) {
                 return;
             }
 
+            if(allNodes.length > 500) {
+                svg.selectAll('*').remove();
+                return;
+            }
+
             allNodes.sort();
 
             const adjacencyList = getAdjancecyList(edges);
