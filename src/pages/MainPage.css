@@ -65,7 +65,7 @@ body {
     outline: none;
     padding: 16px;
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     width: 10%;
 }
 
