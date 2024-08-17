@@ -85,22 +85,13 @@ export function Controls(props: any) {
     const tidyGraph = () => {
         if (!props.graphContainerRef.current) return;
 
-        props.setIsTidy(true);
-
         const width = props.graphContainerRef.current.clientWidth;
         const height = props.graphContainerRef.current.clientHeight;
         const margin = 20;
-        const nodeRadius = 20;
 
         const svg = d3.select(props.graphContainerRef.current)
-            .attr('width', width)
-            .attr('height', height);
 
         try {
-            svg.selectAll('*').remove();
-
-            defineArrowheadMarker(svg, props.isDirected);
-
             const allNodes: Node[] = []
             const edges = props.edges.trim().split('\n').map((edge: string) => {
                 const parts = edge.trim().split(' ');
@@ -146,27 +137,29 @@ export function Controls(props: any) {
             const duplicateNodes: Set<Node> = new Set<Node>()
 
             const combinedNodes = root.descendants().filter(d => d.data.name !== dummyRootName && !duplicateNodes.has(d.data.name) && duplicateNodes.add(d.data.name));
-            const combinedLinks = edges.map((edge: any) => {
-                return { source: edge.from, target: edge.to, weight: edge.weight };
-            });
+            
+            const nodePositions = new Map<Node, { x: number | undefined, y: number | undefined }>();
 
-            combinedNodes.forEach(node => {
-                if (node.parent && node.parent.data.name === dummyRootName) {
-                    node.parent = null;
-                }
-            });
-
-            if (props.simulationRef.current) {
-                props.simulationRef.current.stop();
-                props.simulationRef.current = null;
+            let upwardsPush = -50;
+            const rootDescendants = root.descendants()
+            if(rootDescendants.length > 1 && rootDescendants[1].y !== undefined && rootDescendants[0].y !== undefined) {
+                upwardsPush += rootDescendants[1].y - rootDescendants[0].y
             }
 
-            setSimulationForce(props.simulationRef, combinedNodes, combinedLinks, nodeRadius, width, height, () => ticked(svg, nodeRadius, width, height), true);
+            combinedNodes.forEach(node => {
+                nodePositions.set(node.data.name, { x: node.x, y: ((node.y || 0) - upwardsPush)});
+            });
 
-            drawEdges(svg, combinedLinks, true);
-
-            drawNodes(svg, combinedNodes, nodeRadius, props.isColorful, props.simulationRef, true);
-
+            const simulation = props.simulationRef.current;
+            simulation.nodes().forEach((node: any) => {
+                const position = nodePositions.get(node.id);
+                if (position) {
+                    node.x = position.x;
+                    node.y = position.y;
+                }
+            })
+            simulation.alpha(1).restart();
+        
             lockGraph()
         } catch (e) {
             console.error(e);

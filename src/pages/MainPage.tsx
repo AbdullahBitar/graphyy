@@ -27,16 +27,10 @@ export function MainPage() {
         paintEdgesBlack();
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
+        
         const nodeRadius = 20;
 
         const svg = d3.select(graphContainerRef.current)
-
-        if (isTidy) {
-            simulationRef.current?.stop();
-            simulationRef.current = null;
-            svg.selectAll('*').remove();
-            setIsTidy(false);
-        }
 
         defineArrowheadMarker(svg, isDirected);
 
