@@ -106,13 +106,13 @@ export function resetNodesPos(simulationRef: any, width: number, height: number)
 
 export function ticked(svg: any, nodeRadius: number, width: number, height: number) {
     svg.selectAll('.node')
-        .attr('transform', (d: any) => `translate(${Math.max(nodeRadius, Math.min(width - nodeRadius, d.x))},${Math.max(nodeRadius, Math.min(height - nodeRadius, d.y))})`);
+        .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
 
     svg.selectAll('line')
-        .attr('x1', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.source.x)))
-        .attr('y1', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.source.y)))
-        .attr('x2', (d: any) => Math.max(nodeRadius, Math.min(width - nodeRadius, d.target.x)))
-        .attr('y2', (d: any) => Math.max(nodeRadius, Math.min(height - nodeRadius, d.target.y)))
+        .attr('x1', (d: any) => d.source.x)
+        .attr('y1', (d: any) => d.source.y)
+        .attr('x2', (d: any) => d.target.x)
+        .attr('y2', (d: any) => d.target.y)
 
     svg.selectAll('.edge-weight')
         .attr('x', function (d: any) {

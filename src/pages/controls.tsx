@@ -58,6 +58,7 @@ export function Controls(props: any) {
             return;
         }
         props.setEdges(generateRandomGraph(graphNodesNum, graphEdgesNum, genWeight))
+        unlockGraph()
     }
     function setRandomTree() {
         if(treeNodesNum < 1) {
@@ -65,6 +66,7 @@ export function Controls(props: any) {
             return;
         }
         props.setEdges(generateRandomTree(treeNodesNum, genWeight))
+        unlockGraph()
     }
 
     const handleGraphNodeCountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
