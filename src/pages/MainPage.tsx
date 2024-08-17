@@ -16,6 +16,7 @@ export function MainPage() {
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
     const [isDirected, setIsDirected] = useState(false);
     const [width] = useWindowSize();
+    const nodeRadius = 20;
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -28,8 +29,6 @@ export function MainPage() {
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
         
-        const nodeRadius = 20;
-
         const svg = d3.select(graphContainerRef.current)
 
         defineArrowheadMarker(svg, isDirected);
@@ -101,8 +100,16 @@ export function MainPage() {
     }, [isDirected]);
 
     useEffect(() => {
-        if(graphContainerRef.current)
-            resetNodesPos(simulationRef, graphContainerRef.current?.clientWidth, graphContainerRef.current?.clientHeight)
+        if(graphContainerRef.current && simulationRef.current) {
+            const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight;
+            simulationRef.current.force('boundary', () => {
+                simulationRef.current.nodes().forEach((node: any) => {
+                    node.x = Math.max(nodeRadius, Math.min(width - nodeRadius, node.x));
+                    node.y = Math.max(nodeRadius, Math.min(height - nodeRadius, node.y));
+                });
+            });
+            simulationRef.current.alpha(1).restart();
+        }
     }, [width])
 
     return (
