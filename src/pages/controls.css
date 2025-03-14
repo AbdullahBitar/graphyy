@@ -133,7 +133,7 @@ input:checked+.slider:before {
 
 .universal-controls {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     margin-top: 10px;
 }
 
@@ -233,4 +233,22 @@ div h3{
     .controls {
         width: 100%;
     }
+}
+
+.node-size-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; /* Adds spacing between label, slider, and text */
+    margin-top: 15px;
+}
+
+.node-size-container input {
+    width: 60%;
+    max-width: 200px;
+}
+
+.node-size-container span {
+    font-size: 14px;
+    font-weight: bold;
 }

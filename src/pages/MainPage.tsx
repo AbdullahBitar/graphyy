@@ -16,7 +16,7 @@ export function MainPage() {
     const [allNodes, setAllNodes] = useState<Map<Node, any>>(new Map<Node, any>());
     const [isDirected, setIsDirected] = useState(false);
     const [width] = useWindowSize();
-    const nodeRadius = 20;
+    const [nodeRadius, setNodeRadius] = useState(20);
 
     const handleEdgesChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
         setEdges(event.target.value);
@@ -28,7 +28,7 @@ export function MainPage() {
         paintEdgesBlack();
 
         const width = graphContainerRef.current.clientWidth, height = graphContainerRef.current.clientHeight, margin = 20;
-        
+
         const svg = d3.select(graphContainerRef.current)
 
         defineArrowheadMarker(svg, isDirected);
@@ -112,6 +112,13 @@ export function MainPage() {
         }
     }, [width])
 
+    useEffect(() => {
+        d3.selectAll('circle')
+            .each(function () {
+                d3.select(this).attr('r', nodeRadius);
+            });
+    }, [nodeRadius])
+
     return (
         <div className="content">
             <div className="header">
@@ -124,7 +131,7 @@ export function MainPage() {
                         <TextareaAutosize className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></TextareaAutosize>
                         : <textarea className="text-input" placeholder="Enter graph edges" value={edges} onChange={handleEdgesChange} ></textarea>
                 }
-                <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} />
+                <Controls isTidy={isTidy} setIsTidy={setIsTidy} graphContainerRef={graphContainerRef} isColorful={isColorful} setIsColorful={setIsColorful} setEdges={setEdges} edges={edges} drawGraph={drawGraph} simulationRef={simulationRef} isDirected={isDirected} setIsDirected={setIsDirected} nodeRadius={nodeRadius} setNodeRadius={setNodeRadius}/>
             </div>
         </div>
     );

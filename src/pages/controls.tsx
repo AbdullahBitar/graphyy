@@ -642,6 +642,17 @@ export function Controls(props: any) {
                     renderAlgorithms()
                 }
             </div>
+            <div className="control-item node-size-container">
+                <label >Node Size:</label>
+                <input
+                    type="range"
+                    min="10"
+                    max="40"
+                    value={props.nodeRadius}
+                    onChange={(e) => props.setNodeRadius(Number(e.target.value))}
+                />
+                <span>{props.nodeRadius}</span>
+            </div>
             <ToastContainer />
         </div>
     );
