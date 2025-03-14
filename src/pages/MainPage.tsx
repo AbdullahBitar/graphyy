@@ -115,8 +115,12 @@ export function MainPage() {
     useEffect(() => {
         d3.selectAll('circle')
             .each(function () {
-                d3.select(this).attr('r', nodeRadius);
+                d3.select(this).attr('r', nodeRadius)
             });
+        d3.selectAll('text')
+            .each(function() {
+                d3.select(this).attr('font-size', 0.8*nodeRadius)
+            })
     }, [nodeRadius])
 
     return (
